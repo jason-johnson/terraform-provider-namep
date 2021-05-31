@@ -29,6 +29,12 @@ website/vendor
 
 .devcontainer
 
+gen.go
+resourceDefinition.json
+resourceDefinition_out_of_docs.json
+models_generated.go
+model_locations_generated.go
+
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/

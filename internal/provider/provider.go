@@ -71,8 +71,7 @@ func New(version string) func() *schema.Provider {
 				},
 			},
 			DataSourcesMap: map[string]*schema.Resource{
-				"scaffolding_data_source": dataSourceScaffolding(),
-				"namep_azure_name":        dataSourceAzureName(),
+				"namep_azure_name": dataSourceAzureName(),
 			},
 		}
 

@@ -13,32 +13,36 @@ import (
 
 func dataSourceAzureName() *schema.Resource {
 	return &schema.Resource{
+		Description: "`namep_azure_name` defines a name for an azure resource.\n\n" +
+			"The format will be used based on the the resource type selected and the appropriate format string.",
+
 		ReadContext: dataSourceNameRead,
 
 		Schema: map[string]*schema.Schema{
 			nameProp: {
 				Type:        schema.TypeString,
-				Description: "Name to put in the #{NAME} location of the formats",
+				Description: "Name to put in the #{NAME} location of the formats.",
 				ForceNew:    true,
 				Required:    true,
 			},
 			typeProp: {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "Type of resource to create a name for (resource name used by terraform, required for #{SLUG})",
+				Description:      "Type of resource to create a name for (resource name used by terraform, required for #{SLUG}).",
 				ValidateDiagFunc: stringInResourceMapKeys(ResourceDefinitions),
 				ForceNew:         true,
 			},
 			locationProp: {
 				Type:        schema.TypeString,
-				Description: "Value to use for the #{LOC} portion of the format.  Also used to compute #{SHORT_LOC} and #{ALT_SHORT_LOC}",
+				Description: "Value to use for the #{LOC} portion of the format.  Also used to compute #{SHORT_LOC} and #{ALT_SHORT_LOC}.",
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
 			},
 			resultProp: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Description: "The name created from the format.",
+				Computed:    true,
 			},
 		},
 	}

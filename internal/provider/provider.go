@@ -31,7 +31,7 @@ func New(version string) func() *schema.Provider {
 			Schema: map[string]*schema.Schema{
 				sliceStringProp: {
 					Type:        schema.TypeString,
-					Description: "String containing tokens to be inserted in the format via #{TOKEN_1}, #{TOKEN_2}, etc.",
+					Description: "String containing fields which can be used in the format via #{TOKEN_1}, #{TOKEN_2}, etc.",
 					Optional:    true,
 					Default:     "",
 				},
@@ -40,24 +40,24 @@ func New(version string) func() *schema.Provider {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Extra tokens for use in format (token names will be upper cased)",
+					Description: "Extra tokens for use in format (token names will be upper cased).",
 					Optional:    true,
 				},
 				defaultLocationProp: {
 					Type:        schema.TypeString,
-					Description: "Location to use if none specified",
+					Description: "Location to use if none specified.",
 					Optional:    true,
 					Default:     "",
 				},
 				defaultResourceNameFormatProp: {
 					Type:        schema.TypeString,
-					Description: "Default format to use for type unspecified resources",
+					Description: "Default format to use for resources which can have dashes.",
 					Optional:    true,
 					Default:     "#{SLUG}-#{SHORT_LOC}-#{NAME}",
 				},
 				defaultNodashNameFormatProp: {
 					Type:        schema.TypeString,
-					Description: "Default format to use for entries with no dash",
+					Description: "Default format to use for resources which can not have dashes.",
 					Optional:    true,
 					Default:     "#{SLUG}#{SHORT_LOC}#{NAME}",
 				},
@@ -66,7 +66,7 @@ func New(version string) func() *schema.Provider {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Format to use for specific resource types",
+					Description: "Format to use for specific resource types.",
 					Optional:    true,
 				},
 			},

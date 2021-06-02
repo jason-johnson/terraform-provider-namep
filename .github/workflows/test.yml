@@ -36,6 +36,10 @@ jobs:
       run: |
         go mod download
 
+    - name: Generate models
+      run: |
+        go generate
+
     - name: Build
       run: |
         go build -v .

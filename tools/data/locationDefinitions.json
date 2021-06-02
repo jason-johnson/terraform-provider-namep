@@ -1,0 +1,282 @@
+[
+    {
+        "region": "Africa",
+        "name": "South Africa North",
+        "azName": "southafricanorth",
+        "short_name_1": "sfno",
+        "short_name_2": "sfno"
+    },
+    {
+        "region": "Africa",
+        "name": "South Africa West",
+        "azName": "southafricawest",
+        "short_name_1": "sfwe",
+        "short_name_2": "sfwe"
+    },
+    {
+        "region": "Asia",
+        "name": "East Asia",
+        "azName": "eastasia",
+        "short_name_1": "eaas",
+        "short_name_2": "asea"
+    },
+    {
+        "region": "Asia",
+        "name": "Southeast Asia",
+        "azName": "southeastasia",
+        "short_name_1": "seas",
+        "short_name_2": "assoea"
+    },
+    {
+        "region": "Asia",
+        "name": "Japan West",
+        "azName": "japanwest",
+        "short_name_1": "jawe",
+        "short_name_2": "jawe"
+    },
+    {
+        "region": "Asia",
+        "name": "Japan East",
+        "azName": "japaneast",
+        "short_name_1": "jaea",
+        "short_name_2": "jaea"
+    },
+    {
+        "region": "Asia",
+        "name": "South India",
+        "azName": "southindia",
+        "short_name_1": "soin",
+        "short_name_2": "inso"
+    },
+    {
+        "region": "Asia",
+        "name": "Central India",
+        "azName": "centralindia",
+        "short_name_1": "cnin",
+        "short_name_2": "incn"
+    },
+    {
+        "region": "Asia",
+        "name": "West India",
+        "azName": "westindia",
+        "short_name_1": "wein",
+        "short_name_2": "inwe"
+    },
+    {
+        "region": "Asia",
+        "name": "Korea Central",
+        "azName": "koreacentral",
+        "short_name_1": "krcn",
+        "short_name_2": "krcn"
+    },
+    {
+        "region": "Asia",
+        "name": "Korea South",
+        "azName": "koreasouth",
+        "short_name_1": "krso",
+        "short_name_2": "krso"
+    },
+    {
+        "region": "Asia",
+        "name": "UAE Central",
+        "azName": "uaecentral",
+        "short_name_1": "aecn",
+        "short_name_2": "aecn"
+    },
+    {
+        "region": "Asia",
+        "name": "UAE North",
+        "azName": "uaenorth",
+        "short_name_1": "aeno",
+        "short_name_2": "aeno"
+    },
+    {
+        "region": "Australia",
+        "name": "Australia East",
+        "azName": "australiaeast",
+        "short_name_1": "auea",
+        "short_name_2": "auea"
+    },
+    {
+        "region": "Australia",
+        "name": "Australia Southeast",
+        "azName": "australiasoutheast",
+        "short_name_1": "ause",
+        "short_name_2": "ause"
+    },
+    {
+        "region": "Australia",
+        "name": "Australia Central",
+        "azName": "australiacentral",
+        "short_name_1": "aucn",
+        "short_name_2": "aucn"
+    },
+    {
+        "region": "Australia",
+        "name": "Australia Central 2",
+        "azName": "australiacentral2",
+        "short_name_1": "aucn2",
+        "short_name_2": "aucn3"
+    },
+    {
+        "region": "Europe",
+        "name": "North Europe",
+        "azName": "northeurope",
+        "short_name_1": "neu",
+        "short_name_2": "eun"
+    },
+    {
+        "region": "Europe",
+        "name": "West Europe",
+        "azName": "westeurope",
+        "short_name_1": "weu",
+        "short_name_2": "euw"
+    },
+    {
+        "region": "Europe",
+        "name": "UK South",
+        "azName": "uksouth",
+        "short_name_1": "ukso",
+        "short_name_2": "ukso"
+    },
+    {
+        "region": "Europe",
+        "name": "UK West",
+        "azName": "ukwest",
+        "short_name_1": "ukwe",
+        "short_name_2": "ukwe"
+    },
+    {
+        "region": "Europe",
+        "name": "France Central",
+        "azName": "francecentral",
+        "short_name_1": "frcn",
+        "short_name_2": "frcn"
+    },
+    {
+        "region": "Europe",
+        "name": "France South",
+        "azName": "francesouth",
+        "short_name_1": "frso",
+        "short_name_2": "frso"
+    },
+    {
+        "region": "Europe",
+        "name": "Switzerland North",
+        "azName": "switzerlandnorth",
+        "short_name_1": "nch",
+        "short_name_2": "chn"
+    },
+    {
+        "region": "Europe",
+        "name": "Switzerland West",
+        "azName": "switzerlandwest",
+        "short_name_1": "chw",
+        "short_name_2": "wch"
+    },
+    {
+        "region": "Europe",
+        "name": "Germany North",
+        "azName": "germanynorth",
+        "short_name_1": "deno",
+        "short_name_2": "deno"
+    },
+    {
+        "region": "Europe",
+        "name": "Germany West Central",
+        "azName": "germanywestcentral",
+        "short_name_1": "dewecn",
+        "short_name_2": "dewecn"
+    },
+    {
+        "region": "Europe",
+        "name": "Norway West",
+        "azName": "norwaywest",
+        "short_name_1": "nowe",
+        "short_name_2": "nowe"
+    },
+    {
+        "region": "Europe",
+        "name": "Norway East",
+        "azName": "norwayeast",
+        "short_name_1": "noea",
+        "short_name_2": "noea"
+    },
+    {
+        "region": "North America",
+        "name": "Central US",
+        "azName": "centralus",
+        "short_name_1": "cnus",
+        "short_name_2": "uscn"
+    },
+    {
+        "region": "North America",
+        "name": "East US",
+        "azName": "eastus",
+        "short_name_1": "eaus",
+        "short_name_2": "usea"
+    },
+    {
+        "region": "North America",
+        "name": "East US 2",
+        "azName": "eastus2",
+        "short_name_1": "eaus2",
+        "short_name_2": "usea2"
+    },
+    {
+        "region": "North America",
+        "name": "West US",
+        "azName": "westus",
+        "short_name_1": "weus",
+        "short_name_2": "uswe"
+    },
+    {
+        "region": "North America",
+        "name": "North Central US",
+        "azName": "northcentralus",
+        "short_name_1": "nocnus",
+        "short_name_2": "usnocn"
+    },
+    {
+        "region": "North America",
+        "name": "South Central US",
+        "azName": "southcentralus",
+        "short_name_1": "socnus",
+        "short_name_2": "ussocn"
+    },
+    {
+        "region": "North America",
+        "name": "Canada Central",
+        "azName": "canadacentral",
+        "short_name_1": "cacn",
+        "short_name_2": "cacn"
+    },
+    {
+        "region": "North America",
+        "name": "Canada East",
+        "azName": "canadaeast",
+        "short_name_1": "caea",
+        "short_name_2": "caea"
+    },
+    {
+        "region": "North America",
+        "name": "West Central US",
+        "azName": "westcentralus",
+        "short_name_1": "wecnus",
+        "short_name_2": "uswecn"
+    },
+    {
+        "region": "North America",
+        "name": "West US 2",
+        "azName": "westus2",
+        "short_name_1": "weus2",
+        "short_name_2": "uswe2"
+    },
+    {
+        "region": "South America",
+        "name": "Brazil South",
+        "azName": "brazilsouth",
+        "short_name_1": "brso",
+        "short_name_2": "brso"
+    }
+]

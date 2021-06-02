@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding
+module registry.terraform.io/jason-johnson/namep
 
 go 1.15
 

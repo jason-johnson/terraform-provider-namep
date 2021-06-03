@@ -32,9 +32,47 @@ provider "namep" {
 
 ### Optional
 
-- **default_location** (String) Location to use if none specified. Defaults to ``.
+- **default_location** (String) Location to use if none are specified in the resource.
 - **default_nodash_name_format** (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
 - **default_resource_name_format** (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.
-- **extra_tokens** (Map of String) Extra tokens for use in format (token names will be upper cased).
-- **resource_formats** (Map of String) Format to use for specific resource types.
-- **slice_string** (String) String containing fields which can be used in the format via #{TOKEN_1}, #{TOKEN_2}, etc. Defaults to ``.
+- **extra_tokens** (Map of String) Extra tokens for use in format (see Supported Variables).
+- **resource_formats** (Map of String) Which format to use for specific resource types (see Example Usage).
+
+The purpose of this variable is to allow overrides to the format only for specific resources.
+- **slice_string** (String) A String containing strings seperated by space (see Example Usage) which can be used in the format via the `TOKEN_*` variables (see Supported Variables).
+
+The point of this attribute is so users who have a terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can simply apply it here.
+
+## Creating the format string
+
+The formats are made with a string consisting of static text and variables to be substituted when the name is computed.  The
+formats can be specified in `default_nodash_name_format`, `default_resource_name_format`, and `resource_formats`.  Any normal
+text found in the string will be left as-is.  Any text start surrounded by `#{}` will be treated as a variable and substituted
+if possible.  Variables also support **optional dashes**. A variable like `#{-VAR}` will put a dash in front of the variable
+unless the value is empty.  The dash can also be after the variable name to optionally put it behind the variable instead.
+Using the dash on both sides is not supported.
+
+**Note:  All variable values will be lowercased.**
+
+## Built Variables
+
+**User defined** - Users can define variables with the `extra_tokens` attribute.  The names of these variables will be upper cased and the
+                   values lower cased.  Otherwise they are not processed.
+
+`TOKEN_{n}` - `n` is the number of the field to substitue into the string.  The first field is **1**, not **0**.
+
+`LOC` - This will be replaced with the value in the `location` attribute.  If this attribute is not present, `default_location` from
+        the provider will be used instead.
+
+`SHORT_LOC` - A shortened location name (see [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/data/locationDefinitions.json) for supported locations and their short names).
+
+`ALT_SHORT_LOC` - Alternative short name for location.  This is `short_name_2` in the json mapping file.
+
+`NAME` - The value of the `name` attribute.
+
+`SLUG` - A slug representing the resource the format is being created for.  This variable can only be used if the resource type is specified.
+         See [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/data/resourceDefinition.json) and
+         [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/data/resourceDefinition_out_of_docs.json) for the Azure slug mapping.
+
+         **NOTE**: The Azure mappings are actually loaded from the [azurecaf](https://github.com/aztfmod/terraform-provider-azurecaf) project.
+

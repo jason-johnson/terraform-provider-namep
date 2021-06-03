@@ -30,24 +30,25 @@ func New(version string) func() *schema.Provider {
 		p := &schema.Provider{
 			Schema: map[string]*schema.Schema{
 				sliceStringProp: {
-					Type:        schema.TypeString,
-					Description: "String containing fields which can be used in the format via #{TOKEN_1}, #{TOKEN_2}, etc.",
-					Optional:    true,
-					Default:     "",
+					Type: schema.TypeString,
+					Description: "A String containing strings seperated by space (see Example Usage) which can be used in the format via " +
+						"the `TOKEN_*` variables (see Supported Variables).\n\nThe point of this attribute is so users who have a " +
+						"terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can " +
+						"simply apply it here.",
+					Optional: true,
 				},
 				extraTokensProp: {
 					Type: schema.TypeMap,
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Extra tokens for use in format (token names will be upper cased).",
+					Description: "Extra tokens for use in format (see Supported Variables).",
 					Optional:    true,
 				},
 				defaultLocationProp: {
 					Type:        schema.TypeString,
-					Description: "Location to use if none specified.",
+					Description: "Location to use if none are specified in the resource.",
 					Optional:    true,
-					Default:     "",
 				},
 				defaultResourceNameFormatProp: {
 					Type:        schema.TypeString,
@@ -66,8 +67,9 @@ func New(version string) func() *schema.Provider {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Format to use for specific resource types.",
-					Optional:    true,
+					Description: "Which format to use for specific resource types (see Example Usage).\n\nThe purpose of this variable " +
+						"is to allow overrides to the format only for specific resources.",
+					Optional: true,
 				},
 			},
 			DataSourcesMap: map[string]*schema.Resource{

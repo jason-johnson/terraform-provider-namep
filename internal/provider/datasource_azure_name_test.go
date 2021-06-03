@@ -6,25 +6,91 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAzureName(t *testing.T) {
+func TestAccDataSourceAzureName_default_dashed(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAzureName,
+				Config: testAccDataSourceAzureName_default_rg,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.namep_azure_name.foo", "name", "mygroup"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.foo", "result", "rg-weu-mygroup"),
 				),
 			},
 		},
 	})
 }
 
-const testAccDataSourceAzureName = `
+func TestAccDataSourceAzureName_default_nodash(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAzureName_default_sa,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.namep_azure_name.foo", "result", "stweumyacct"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAzureName_custom_rg_fmt(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAzureName_custom_rg_fmt,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "myapp-dev-weu-uxx1-mygroup"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.wapp", "result", "app-weu-myapp"),
+				),
+			},
+		},
+	})
+}
+
+// test configurations
+
+const testAccDataSourceAzureName_default_rg = `
 data "namep_azure_name" "foo" {
   name = "mygroup"
 	location = "westeurope"
   type = "azurerm_resource_group"
+}
+`
+
+const testAccDataSourceAzureName_default_sa = `
+data "namep_azure_name" "foo" {
+  name = "myacct"
+	location = "westeurope"
+  type = "azurerm_storage_account"
+}
+`
+
+const testAccDataSourceAzureName_custom_rg_fmt = `
+provider "namep" {
+  slice_string     = "MYAPP DEV"
+  default_location = "westeurope"
+  extra_tokens = {
+    branch = "uxx1"
+  }
+  resource_formats = {
+    azurerm_resource_group = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
+  }
+}
+
+data "namep_azure_name" "rg" {
+  name = "mygroup"
+	location = "westeurope"
+  type = "azurerm_resource_group"
+}
+
+data "namep_azure_name" "wapp" {
+  name = "myapp"
+	location = "westeurope"
+  type = "azurerm_app_service"
 }
 `

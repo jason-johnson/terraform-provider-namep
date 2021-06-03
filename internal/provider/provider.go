@@ -34,7 +34,7 @@ func New(version string) func() *schema.Provider {
 					Description: "A String containing strings seperated by space (see Example Usage) which can be used in the format via " +
 						"the `TOKEN_*` variables (see Supported Variables).\n\nThe point of this attribute is so users who have a " +
 						"terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can " +
-						"simply apply it here.",
+						"simply apply it here and use parts of it in their formats.",
 					Optional: true,
 				},
 				extraTokensProp: {
@@ -42,12 +42,12 @@ func New(version string) func() *schema.Provider {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Extra tokens for use in format (see Supported Variables).",
+					Description: "Extra variables for use in format (see Supported Variables).",
 					Optional:    true,
 				},
 				defaultLocationProp: {
 					Type:        schema.TypeString,
-					Description: "Location to use if none are specified in the resource.",
+					Description: "Location to use if none are specified in the data_source.",
 					Optional:    true,
 				},
 				defaultResourceNameFormatProp: {
@@ -67,7 +67,7 @@ func New(version string) func() *schema.Provider {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Which format to use for specific resource types (see Example Usage).\n\nThe purpose of this variable " +
+					Description: "Which format to use for specific resource types (see Example Usage).\n\nThe purpose of this attribute " +
 						"is to allow overrides to the format only for specific resources.",
 					Optional: true,
 				},

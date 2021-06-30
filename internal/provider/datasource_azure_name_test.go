@@ -61,7 +61,7 @@ func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
 				Config: testAccDataSourceAzureName_custom_type_fmt,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "myapp-dev-weu-uxx1-mygroup"),
-					resource.TestCheckResourceAttr("data.namep_azure_name.custom", "result", "app-weu-myapp"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.custom", "result", "thing-dev-weu-uxx1-mycustom"),
 				),
 			},
 		},

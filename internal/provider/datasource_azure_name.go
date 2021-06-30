@@ -29,7 +29,7 @@ func dataSourceAzureName() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Description:      "Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).",
-				ValidateDiagFunc: stringInResourceMapKeys(ResourceDefinitions),
+				ValidateDiagFunc: stringIsValidResourceName(ResourceDefinitions),
 				ForceNew:         true,
 			},
 			locationProp: {
@@ -83,12 +83,19 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 
 	definition, exists := ResourceDefinitions[name_type]
 
+	var format string
+
 	if !exists {
-		diags = appendError(diags, fmt.Sprintf("resource type %q unknown to module", name_type))
-		return "", diags
+		format, exists = config.resource_formats[name_type]
+
+		if !exists {
+			diags = appendError(diags, fmt.Sprintf("resource type %q unknown to module", name_type))
+			return "", diags
+		}
+	} else {
+		format, diags = getFormatString(d, config, definition, diags)
 	}
 
-	format, diags := getFormatString(d, config, definition, diags)
 	locationDefinition, locsOk := LocationDefinitions[location]
 
 	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {

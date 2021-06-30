@@ -52,6 +52,22 @@ func TestAccDataSourceAzureName_custom_rg_fmt(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAzureName_custom_type_fmt,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "myapp-dev-weu-uxx1-mygroup"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.custom", "result", "thing-dev-weu-uxx1-mycustom"),
+				),
+			},
+		},
+	})
+}
+
 // test configurations
 
 const testAccDataSourceAzureName_default_rg = `
@@ -92,5 +108,32 @@ data "namep_azure_name" "wapp" {
   name = "myapp"
 	location = "westeurope"
   type = "azurerm_app_service"
+}
+`
+
+const testAccDataSourceAzureName_custom_type_fmt = `
+provider "namep" {
+  slice_string     = "MYAPP DEV"
+  default_location = "westeurope"
+  extra_tokens = {
+    branch = "uxx1"
+  }
+	default_resource_name_format = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
+	default_nodash_name_format = "#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{BRANCH}#{NAME}"
+  resource_formats = {
+    my_type = "thing-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
+  }
+}
+
+data "namep_azure_name" "rg" {
+  name = "mygroup"
+	location = "westeurope"
+  type = "azurerm_resource_group"
+}
+
+data "namep_azure_name" "custom" {
+  name = "mycustom"
+	location = "westeurope"
+  type = "my_type"
 }
 `

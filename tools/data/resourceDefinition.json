@@ -1,5 +1,16 @@
 [
     {
+        "name": "azurerm_aadb2c_directory",
+        "min_length": 1,
+        "max_length": 75,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{0,73}[a-zA-Z0-9]$\"",
+        "scope": "global",
+        "slug": "aadb2c",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },    
+    {
         "name": "azurerm_analysis_services_server",
         "min_length": 3,
         "max_length": 63,
@@ -87,6 +98,28 @@
         "lowercase": false,
         "regex": "`[^-\\w\\._\\(\\)]`"
     },
+    {
+        "name": "azurerm_automation_hybrid_runbook_worker_group",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^([^<>*%&:\\\\?.+/#\\\\s]?[ ]?){0,127}[^<>*%&:\\\\?.+/#\\\\s]$\"",
+        "scope": "parent",
+        "slug": "aahwg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[<>*%&:\\\\?.+/#]\""
+    },
+    {
+        "name": "azurerm_automation_job_schedule",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[^<>*%:.?\\\\+\\\\/]{0,127}[^<>*%:.?\\\\+\\\\/ ]$\"",
+        "scope": "parent",
+        "slug": "aajs",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^-\\w\\._\\(\\)]`"
+    },    
     {
         "name": "azurerm_automation_runbook",
         "min_length": 1,
@@ -265,6 +298,127 @@
         "regex": "\"[^0-9A-Za-z]\""
     },
     {
+        "name": "azurerm_cdn_frontdoor_custom_domain",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,258}[a-zA-Z0-9])?$\"",
+        "scope": "parent",
+        "slug": "cfdcd",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_endpoint",
+        "min_length": 1,
+        "max_length": 46,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,44}[a-zA-Z0-9])?$\"",
+        "scope": "global",
+        "slug": "cfde",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_firewall_policy",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[a-zA-Z][0-9a-zA-Z]{0,127}$\"",
+        "scope": "resourceGroup",
+        "slug": "cfdfp",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_origin",
+        "min_length": 1,
+        "max_length": 90,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,88}[a-zA-Z0-9])?$\"",
+        "scope": "parent",
+        "slug": "cfdo",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_origin_group",
+        "min_length": 1,
+        "max_length": 90,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,88}[a-zA-Z0-9])?$\"",
+        "scope": "parent",
+        "slug": "cfdog",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_profile",
+        "min_length": 1,
+        "max_length": 90,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,88}[a-zA-Z0-9])?$\"",
+        "scope": "resourceGroup",
+        "slug": "cfdp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_route",
+        "min_length": 1,
+        "max_length": 90,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,88}[a-zA-Z0-9])?$\"",
+        "scope": "parent",
+        "slug": "cfdroute",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_rule",
+        "min_length": 1,
+        "max_length": 60,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9]{0,59}$\"",
+        "scope": "parent",
+        "slug": "cfdr",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_rule_set",
+        "min_length": 1,
+        "max_length": 60,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9]{0,59}$\"",
+        "scope": "parent",
+        "slug": "cfdrs",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_secret",
+        "min_length": 2,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{0,258}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "cfds",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_cdn_frontdoor_security_policy",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[0-9A-Za-z_-]{1,260}$\"",
+        "scope": "parent",
+        "slug": "cfdsp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
         "name": "azurerm_cdn_profile",
         "min_length": 1,
         "max_length": 260,
@@ -309,15 +463,37 @@
         "regex": "\"[^0-9A-Za-z_.-]\""
     },
     {
+        "name": "azurerm_dedicated_host",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_.]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "dh",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_dedicated_host_group",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_.]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "dhg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
         "name": "azurerm_disk_encryption_set",
         "min_length": 1,
         "max_length": 80,
-        "validation_regex": "\"^[a-zA-Z0-9_]{1,80}$\"",
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,80}$\"",
         "scope": "resourceGroup",
         "slug": "des",
-        "dashes": false,
+        "dashes": true,
         "lowercase": false,
-        "regex": "\"[^0-9A-Za-z_]\""
+        "regex": "\"[^0-9A-Za-z_-]\""
     },
     {
         "name": "azurerm_image",
@@ -356,12 +532,12 @@
         "name": "azurerm_managed_disk",
         "min_length": 1,
         "max_length": 80,
-        "validation_regex": "\"^[a-zA-Z0-9_]{1,80}$\"",
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,78}[a-zA-Z0-9_]$\"",
         "scope": "resourceGroup",
         "slug": "dsk",
-        "dashes": false,
+        "dashes": true,
         "lowercase": false,
-        "regex": "\"[^0-9A-Za-z_]\""
+        "regex": "\"[^0-9A-Za-z_.-]\""
     },
     {
         "name": "azurerm_virtual_machine",
@@ -386,10 +562,43 @@
         "regex": "\"[\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_]\""
     },
     {
+        "name": "azurerm_vmware_cluster",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_.]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "vwc",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_vmware_express_route_authorization",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_.]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "vwera",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_vmware_private_cloud",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_.]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "vwpc",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
         "name": "azurerm_windows_virtual_machine",
         "min_length": 1,
-        "max_length": 15,
-        "validation_regex": "\"^[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_][^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&]{0,13}[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&.-]$\"",
+        "max_length": 64,
+        "validation_regex": "\"^[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_][^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&]{0,62}[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&.-]$\"",            
         "scope": "resourceGroup",
         "slug": "vm",
         "dashes": true,
@@ -399,13 +608,35 @@
     {
         "name": "azurerm_windows_virtual_machine_scale_set",
         "min_length": 1,
-        "max_length": 15,
-        "validation_regex": "\"^[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_][^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&]{0,13}[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&.-]$\"",
+        "max_length": 64,
+        "validation_regex": "\"^[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_][^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&]{0,62}[^\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&.-]$\"",
         "scope": "resourceGroup",
         "slug": "vmss",
         "dashes": true,
         "lowercase": false,
         "regex": "\"[\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_]\""
+    },
+    {
+        "name": "azurerm_consumption_budget_resource_group",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,63}$\"",
+        "scope": "resourceGroup",
+        "slug": "acbrg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-_]\""
+    },
+    {
+        "name": "azurerm_consumption_budget_subscription",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "acbs",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-_]\""
     },
     {
         "name": "azurerm_containerGroups",
@@ -437,6 +668,28 @@
         "validation_regex": "\"^[a-zA-Z0-9]{1,50}$\"",
         "scope": "resourceGroup",
         "slug": "crwh",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_redhat_openshift_cluster",
+        "min_length": 1,
+        "max_length": 30,
+        "validation_regex": "\"^[a-zA-Z0-9]{1,30}$\"",
+        "scope": "resourceGroup",
+        "slug": "aroc",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_redhat_openshift_domain",
+        "min_length": 1,
+        "max_length": 30,
+        "validation_regex": "\"^[a-zA-Z0-9]{1,30}$\"",
+        "scope": "resourceGroup",
+        "slug": "arod",
         "dashes": false,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z]\""
@@ -562,6 +815,39 @@
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_-]\""
     },
+{
+        "name": "azurerm_mysql_flexible_server",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-z0-9][a-zA-Z0-9-]{1,61}[a-z0-9]$\"",
+        "scope": "global",
+        "slug": "mysqlf",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_mysql_flexible_server_database",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,63}$\"",
+        "scope": "parent",
+        "slug": "mysqlfdb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_mysql_flexible_server_firewall_rule",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,128}$\"",
+        "scope": "parent",
+        "slug": "mysqlffw",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },    
     {
         "name": "azurerm_postgresql_server",
         "min_length": 3,
@@ -602,6 +888,39 @@
         "validation_regex": "\"^[a-zA-Z0-9-_]{1,128}$\"",
         "scope": "parent",
         "slug": "psqlvn",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_postgresql_flexible_server",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$\"",
+        "scope": "global",
+        "slug": "psqlf",
+        "dashes": true,
+        "lowercase": true,
+        "regex": "\"[^0-9a-z-]\""
+    },
+    {
+        "name": "azurerm_postgresql_flexible_server_database",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,63}$\"",
+        "scope": "parent",
+        "slug": "psqlfdb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_postgresql_flexible_server_firewall_rule",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[a-zA-Z0-9-_]{1,128}$\"",
+        "scope": "parent",
+        "slug": "psqlffw",
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_-]\""
@@ -695,6 +1014,62 @@
         "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
     },
     {
+        "name": "azurerm_data_factory_dataset_azure_blob",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,258}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "adfblob",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },    
+    {
+        "name": "azurerm_data_factory_dataset_cosmosdb_sqlapi",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,258}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "adfsqlapi",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },      
+    {
+        "name": "azurerm_data_factory_dataset_delimited_text",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,258}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "adfdtext",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },        
+    {
+        "name": "azurerm_data_factory_dataset_http",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,258}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "adfhttp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },      
+    {
+        "name": "azurerm_data_factory_dataset_json",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,258}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "adfjson",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },      
+       
+    {
         "name": "azurerm_data_factory_dataset_postgresql",
         "min_length": 1,
         "max_length": 260,
@@ -739,6 +1114,73 @@
         "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
     },
     {
+        "name": "azurerm_data_factory_linked_service_azure_blob_storage",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adflsabs",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },
+    {
+        "name": "azurerm_data_factory_linked_service_azure_databricks",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adflsadb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },
+    {
+        "name": "azurerm_data_factory_linked_service_azure_function",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adflsaf",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },        
+    {
+        "name": "azurerm_data_factory_linked_service_azure_sql_database",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adflsasdb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },        
+    {
+        "name": "azurerm_data_factory_linked_service_cosmosdb",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adflsacdb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },
+    {
+        "name": "azurerm_data_factory_linked_service_sftp",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adflsaftp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    }, 
+     
+    {
         "name": "azurerm_data_factory_linked_service_data_lake_storage_gen2",
         "min_length": 1,
         "max_length": 260,
@@ -759,6 +1201,50 @@
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },
+    {
+        "name": "azurerm_data_protection_backup_vault",
+        "min_length": 2,
+        "max_length": 50,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{1,49}$\"",
+        "scope": "resourceGroup",
+        "slug": "dpbv",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^a-zA-Z0-9-]`"
+    },
+    {
+        "name": "azurerm_data_protection_backup_policy_disk",
+        "min_length": 3,
+        "max_length": 150,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9\\\\-]{1,148}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "dpbpd",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^a-zA-Z0-9-]`"
+    },
+    {
+        "name": "azurerm_data_protection_backup_policy_blob_storage",
+        "min_length": 3,
+        "max_length": 150,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9\\\\-]{1,148}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "dpbpb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^a-zA-Z0-9-]`"
+    },
+    {
+        "name": "azurerm_data_protection_backup_policy_postgresql",
+        "min_length": 3,
+        "max_length": 150,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9\\\\-]{1,148}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "dpbpp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^a-zA-Z0-9-]`"
     },
     {
         "name": "azurerm_recovery_services_vault",
@@ -815,6 +1301,18 @@
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
     },
+    {
+        "name": "azurerm_data_factory_linked_service_web",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[a-zA-Z0-9][^<>*%:.?\\\\+\\\\/]{0,259}$\"",
+        "scope": "parent",
+        "slug": "adfsvweb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:.?\\\\+\\\\/]\""
+    },    
+    
     {
         "name": "azurerm_data_factory_trigger_schedule",
         "min_length": 1,
@@ -918,12 +1416,23 @@
         "name": "azurerm_frontdoor_firewall_policy",
         "min_length": 1,
         "max_length": 80,
-        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,78}[a-zA-Z0-9_]$\"",
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9]{0,78}[a-zA-Z0-9]$\"",
         "scope": "global",
         "slug": "fdfw",
-        "dashes": true,
+        "dashes": false,
         "lowercase": false,
-        "regex": "\"[^0-9A-Za-z_.-]\""
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_web_application_firewall_policy",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9]{0,78}[a-zA-Z0-9]$\"",
+        "scope": "global",
+        "slug": "wafw",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
     },
     {
         "name": "azurerm_hdinsight_hadoop_cluster",
@@ -1014,6 +1523,39 @@
         "regex": "\"[^0-9A-Za-z-]\""
     },
     {
+        "name": "azurerm_healthcare_dicom_service",
+        "min_length": 3,
+        "max_length": 24,
+        "validation_regex": "\"^[a-z0-9][a-z0-9-]{1,22}[a-z0-9]$\"",
+        "scope": "parent",
+        "slug": "dicom",
+        "dashes": true,
+        "lowercase": true,
+        "regex": "\"[^0-9a-z-]\""
+    },
+    {
+        "name": "azurerm_healthcare_medtech_service",
+        "min_length": 3,
+        "max_length": 24,
+        "validation_regex": "\"^[a-z0-9][a-z0-9-]{1,22}[a-z0-9]$\"",
+        "scope": "parent",
+        "slug": "medtech",
+        "dashes": true,
+        "lowercase": true,
+        "regex": "\"[^0-9a-z-]\""
+    },
+    {
+        "name": "azurerm_healthcare_workspace",
+        "min_length": 3,
+        "max_length": 24,
+        "validation_regex": "\"^[a-z0-9]{3,24}$\"",
+        "scope": "global",
+        "slug": "hcw",
+        "dashes": false,
+        "lowercase": true,
+        "regex": "\"[^0-9a-z]\""
+    },
+    {
         "name": "azurerm_iotcentral_application",
         "min_length": 2,
         "max_length": 63,
@@ -1034,6 +1576,17 @@
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_iothub_certificate",
+        "min_length": 1,
+        "max_length": 64,
+        "validation_regex": "\"^[a-zA-Z0-9-._]{1,64}$\"",
+        "scope": "parent",
+        "slug": "iotcert",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-._]\""
     },
     {
         "name": "azurerm_iothub_consumer_group",
@@ -1266,6 +1819,17 @@
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_.-]\""
+    },    
+    {
+        "name": "azurerm_firewall_policy",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "afwp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
     },
     {
         "name": "azurerm_eventhub",
@@ -1488,6 +2052,17 @@
         "regex": "\"[^0-9A-Za-z_.-]\""
     },
     {
+        "name": "azurerm_virtual_hub_connection",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "parent",
+        "slug": "vhcon",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
         "name": "azurerm_snapshots",
         "min_length": 1,
         "max_length": 80,
@@ -1497,6 +2072,17 @@
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_static_site",
+        "min_length": 1,
+        "max_length": 40,
+        "validation_regex": "\"^[a-zA-Z0-9-]{1,40}$\"",
+        "scope": "resourceGroup",
+        "slug": "stapp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
     },
     {
         "name": "azurerm_storage_account",
@@ -1545,6 +2131,30 @@
         "lowercase": false,
         "regex": "\"[^0-9a-z-]\""
     },
+    {
+        "name": "azurerm_storage_sync",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[^<>*%:.?\\\\+\\\\/]{0,259}[^<>*%:.?\\\\+\\\\/ ]$\"",
+        "invalid-double-dash": true,
+        "scope": "resourceGroup",
+        "slug": "stsy",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[<>*%:.?\\\\+\\\\/]\""
+    },
+    {
+        "name": "azurerm_storage_sync_group",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[^<>*%:.?\\\\+\\\\/]{0,259}[^<>*%:.?\\\\+\\\\/ ]$\"",
+        "invalid-double-dash": true,
+        "scope": "resourceGroup",
+        "slug": "stsg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[<>*%:.?\\\\+\\\\/]\""
+    },    
     {
         "name": "azurerm_storage_table",
         "min_length": 3,
@@ -1714,6 +2324,17 @@
         "regex": "\"[^0-9A-Za-z-]\""
     },
     {
+        "name": "azurerm_mssql_mi",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$\"",
+        "scope": "global",
+        "slug": "sqlmi",
+        "dashes": true,
+        "lowercase": true,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
         "name": "azurerm_mssql_database",
         "min_length": 1,
         "max_length": 128,
@@ -1780,6 +2401,17 @@
         "regex": "\"[^0-9A-Za-z-]\""
     },
     {
+        "name": "azurerm_log_analytics_storage_insights",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{2,61}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "lasi",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },    
+    {
         "name": "azurerm_service_fabric_cluster",
         "min_length": 4,
         "max_length": 23,
@@ -1791,6 +2423,17 @@
         "regex": "\"[^0-9a-z-]\""
     },
     {
+        "name": "azurerm_maintenance_configuration",
+        "min_length": 1,
+        "max_length": 60,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,58}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "mcf",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
         "name": "azurerm_maps_account",
         "min_length": 1,
         "max_length": 98,
@@ -1800,6 +2443,17 @@
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_nginx_deployment",
+        "min_length": 1,
+        "max_length": 30,
+        "validation_regex": "\"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,28}[a-zA-Z0-9])?$\"",
+        "scope": "resourceGroup",
+        "slug": "nginx",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
     },
     {
         "name": "azurerm_network_watcher",
@@ -1879,12 +2533,67 @@
         "regex": "\"[^0-9A-Za-z_.-]\""
     },
     {
+        "name": "azurerm_private_dns_resolver",
+        "min_length": 3,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-_]{1,78}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "dnspr",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_private_dns_resolver_dns_forwarding_ruleset",
+        "min_length": 2,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-_]{0,78}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "dnsfwrs",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_private_dns_resolver_inbound_endpoint",
+        "min_length": 3,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-_]{1,78}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "dnsprie",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_private_dns_resolver_outbound_endpoint",
+        "min_length": 3,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-_]{1,78}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "dnsproe",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
         "name": "azurerm_private_dns_zone",
         "min_length": 1,
         "max_length": 63,
         "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,61}[a-zA-Z0-9_]$\"",
         "scope": "resourceGroup",
         "slug": "pdns",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_private_endpoint",
+        "min_length": 2,
+        "max_length": 64,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,62}[a-zA-Z0-9_]$\"",
+        "scope": "resourceGroup",
+        "slug": "pe",
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_.-]\""
@@ -2005,7 +2714,7 @@
         "max_length": 50,
         "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,48}[a-zA-Z0-9]$\"",
         "scope": "parent",
-        "slug": "dnsrec",
+        "slug": "sbtar",
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z_.-]\""
@@ -2197,7 +2906,7 @@
         "dashes": false,
         "lowercase": true,
         "regex": "\"[^0-9a-zA-Z]\""
-    },
+    },    
     {
         "name": "azurerm_synapse_sql_pool ",
         "min_length": 1,
@@ -2243,6 +2952,39 @@
         "regex": "\"[^0-9A-Za-z_.-]\""
     },
     {
+        "name": "azurerm_monitor_action_group",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[^|:<>+#%&\\\\?/]{0,259}[^|:<>+#%&\\\\?/. ]$\"",
+        "scope": "resourceGroup",
+        "slug": "amag",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^~!@$^*()\\[\\]\\{\\}_\\-=\"';,0-9A-Za-z _.-]`"
+    },
+    {
+        "name": "azurerm_monitor_activity_log_alert",
+        "min_length": 1,
+        "max_length": 260,
+        "validation_regex": "\"^[^<>*%:&?#\\\\+\\\\/]{0,259}[^<>*%:&.?#\\\\+\\\\/]$\"",
+        "scope": "parent",
+        "slug": "adfmysql",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z<>*%:&?#\\\\+\\\\/]\""
+    },
+    {
+        "name": "azurerm_monitor_autoscale_setting",
+        "min_length": 2,
+        "max_length": 64,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{0,62}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "amas",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z _.-]\""
+    },
+    {
         "name": "azurerm_monitor_diagnostic_setting",
         "min_length": 1,
         "max_length": 260,
@@ -2252,6 +2994,28 @@
         "dashes": true,
         "lowercase": false,
         "regex": "\"[^0-9A-Za-z _.-]\""
+    },
+    {
+        "name": "azurerm_monitor_metric_alert",
+        "min_length": 1,
+        "max_length": 251,
+        "validation_regex": "\"^[^<>*%&:\\\\?+/#@{}]{0,250}[^<>*%&:\\\\?+/#@{}. ]$\"",
+        "scope": "resourceGroup",
+        "slug": "ma",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[<>*%&:\\\\?+/#@{}]\""
+    },
+    {
+        "name": "azurerm_monitor_private_link_scope",
+        "min_length": 1,
+        "max_length": 255,
+        "validation_regex": "\"^[0-9A-Za-z-._()]{0,254}[0-9A-Za-z-_()]$\"",
+        "scope": "resourceGroup",
+        "slug": "ampls",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-._()]\""
     },
     {
         "name": "azurerm_virtual_desktop_application_group",
@@ -2408,14 +3172,443 @@
         "regex": "\"[\\\\/\\\"\\\\[\\\\]:|<>+=;,?*@&_]\""
     },
     {
-        "name": "azurerm_monitor_activity_log_alert",
+        "name": "azurerm_vpn_site",
         "min_length": 1,
-        "max_length": 260,
-        "validation_regex": "\"^[^<>*%:&?#\\\\+\\\\/]{0,259}[^<>*%:&.?#\\\\+\\\\/]$\"",
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,78}[a-zA-Z0-9_]$\"",
         "scope": "parent",
-        "slug": "adfmysql",
+        "slug": "vst",
         "dashes": true,
         "lowercase": false,
-        "regex": "\"[^0-9A-Za-z<>*%:&?#\\\\+\\\\/]\""
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_vpn_gateway_connection",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-._]{0,78}[a-zA-Z0-9_]$\"",
+        "scope": "parent",
+        "slug": "vcn",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_netapp_account",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,126}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "ana",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_netapp_pool",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,61}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "anp",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_netapp_volume",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,61}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "anv",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_netapp_snapshot",
+        "min_length": 1,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-_]{0,61}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "ans",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_machine_learning_compute_instance",
+        "min_length": 1,
+        "max_length": 16,
+        "validation_regex": "\"^[a-zA-Z0-9][a-z0-9-]{0,14}[a-zA-Z0-9]$\"",
+        "scope": "parent",
+        "slug": "amlci",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9a-z-]\""
+    },
+    {
+        "name": "azurerm_communication_service",
+        "min_length": 1,
+        "max_length": 64,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,64}$\"",
+        "scope": "parent",
+        "slug": "acs",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_api_management",
+        "min_length": 1,
+        "max_length": 50,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,48}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apim",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },
+    {
+        "name": "azurerm_api_management_api",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimapi",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    }, 
+    {
+        "name": "azurerm_api_management_api_operation_tag",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimapiopt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },
+    {
+        "name": "azurerm_api_management_backend",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex":  "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimbe",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },       
+    {
+        "name": "azurerm_api_management_certificate",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimcer",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },
+    {
+        "name": "azurerm_api_management_logger",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimlg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },   
+    {
+        "name": "azurerm_api_management_gateway",
+        "min_length": 1,
+        "max_length": 80,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimgw",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },
+    {
+        "name": "azurerm_api_management_group",
+        "min_length": 1,
+        "max_length": 80,   
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9-]{0,78}[a-zA-Z0-9|]$\"",
+        "scope": "global",
+        "slug": "apimgr",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^a-zA-Z0-9-]\""
+    },       
+    {
+        "name": "azurerm_digital_twins_instance",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_digital_twins_endpoint_eventhub",
+        "min_length": 3,
+        "max_length": 50,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,50}$\"",
+        "scope": "parent",
+        "slug": "adteh",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_digital_twins_endpoint_eventgrid",
+        "min_length": 3,
+        "max_length": 50,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,50}$\"",
+        "scope": "parent",
+        "slug": "adteg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_digital_twins_endpoint_servicebus",
+        "min_length": 3,
+        "max_length": 50,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,50}$\"",
+        "scope": "parent",
+        "slug": "adtsb",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },    
+    {
+        "name": "azurerm_lb_backend_pool",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_lb_backend_address_pool",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_lb_nat_pool",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_lb_outbound_rule",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_lb_probe",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_lb_rule",
+        "min_length": 4,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9_-]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "adt",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_-]\""
+    },
+    {
+        "name": "azurerm_purview_account",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9_-]$\"",
+        "scope": "subscription",
+        "slug": "purv",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_synapse_integration_runtime_azure",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9-]$\"",
+        "scope": "subscription",
+        "slug": "synira",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_synapse_integration_runtime_self_hosted",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9_-]$\"",
+        "scope": "subscription",
+        "slug": "synirsh",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_synapse_linked_service",
+        "min_length": 1,
+        "max_length": 140,
+        "validation_regex": "\"^[a-zA-Z0-9_]{1,140}$\"",
+        "scope": "subscription",
+        "slug": "synls",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_]\""
+    },
+    {
+        "name": "azurerm_synapse_managed_private_endpoint",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9_.-]{1,61}[a-zA-Z0-9_]$\"",
+        "scope": "subscription",
+        "slug": "synmpe",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_.-]\""
+    },
+    {
+        "name": "azurerm_synapse_private_link_hub",
+        "min_length": 1,
+        "max_length": 45,
+        "validation_regex": "\"^[a-z0-9]{1,45}$\"",
+        "scope": "subscription",
+        "slug": "synplh",
+        "dashes": false,
+        "lowercase": true,
+        "regex": "\"[^0-9a-z]\""
+    },
+    {
+        "name": "azurerm_synapse_sql_pool",
+        "min_length": 3,
+        "max_length": 15,
+        "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9_]{1,13}[a-zA-Z0-9]$\"",
+        "scope": "subscription",
+        "slug": "synsp",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_]\""
+    },
+    {
+        "name": "azurerm_synapse_sql_pool_vulnerability_assessment_baseline",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z0-9]{1,63}$\"",
+        "scope": "subscription",
+        "slug": "synspvab",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z]\""
+    },
+    {
+        "name": "azurerm_synapse_sql_pool_workload_classifier",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[^<>*%:?\\\\+\\\\/]{1,127}[^<>*%:.?\\\\+\\\\/]$\"",
+        "scope": "subscription",
+        "slug": "synspwc",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^-\\w\\._\\(\\)]`"
+    },
+    {
+        "name": "azurerm_synapse_sql_pool_workload_group",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[^<>*%:.?\\\\+\\\\/]{0,127}[^<>*%:.?\\\\+\\\\/ ]$\"",
+        "scope": "subscription",
+        "slug": "synspwg",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "`[^-\\w\\._\\(\\)]`"
+    },
+    {
+        "name": "azurerm_web_pubsub",
+        "min_length": 3,
+        "max_length": 63,
+        "validation_regex": "\"^[a-zA-Z][-a-zA-Z0-9]{1,61}[a-zA-Z0-9]$\"",
+        "scope": "resourceGroup",
+        "slug": "ps",
+        "dashes": true,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z-]\""
+    },
+    {
+        "name": "azurerm_web_pubsub_hub",
+        "min_length": 1,
+        "max_length": 128,
+        "validation_regex": "\"^[a-zA-Z][a-zA-Z0-9_`,.\\\\[\\\\]]{0,127}$\"",
+        "scope": "parent",
+        "slug": "pshub",
+        "dashes": false,
+        "lowercase": false,
+        "regex": "\"[^0-9A-Za-z_`,.\\\\[\\\\]]\""
+    },
+    {
+      "name": "azurerm_subscription_policy_assignment",
+      "min_length": 1,
+      "max_length": 128,
+      "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9\\\\-\\\\._]{0,126}[a-zA-Z0-9_]$\"",
+      "scope": "subscription",
+      "slug": "aspa",
+      "dashes": true,
+      "lowercase": false,
+      "regex": "\"[^a-zA-Z0-9\\\\-\\\\._]\""
+    },
+    {
+      "name": "azurerm_resource_group_policy_assignment",
+      "min_length": 1,
+      "max_length": 128,
+      "validation_regex": "\"^[a-zA-Z0-9][a-zA-Z0-9\\\\-\\\\._]{0,126}[a-zA-Z0-9_]$\"",
+      "scope": "resourceGroup",
+      "slug": "argpa",
+      "dashes": true,
+      "lowercase": false,
+      "regex": "\"[^a-zA-Z0-9\\\\-\\\\._]\""
     }
 ]

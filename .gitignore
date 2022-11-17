@@ -27,8 +27,6 @@ website/node_modules
 
 website/vendor
 
-.devcontainer
-
 models_generated.go
 model_locations_generated.go
 

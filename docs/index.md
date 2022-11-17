@@ -34,14 +34,14 @@ provider "namep" {
 
 ### Optional
 
-- **default_location** (String) Location to use if none are specified in the data_source.
-- **default_nodash_name_format** (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
-- **default_resource_name_format** (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.
-- **extra_tokens** (Map of String) Extra variables for use in format (see Supported Variables).
-- **resource_formats** (Map of String) Which format to use for specific resource types (see Example Usage).
+- `default_location` (String) Location to use if none are specified in the data_source.
+- `default_nodash_name_format` (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
+- `default_resource_name_format` (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.
+- `extra_tokens` (Map of String) Extra variables for use in format (see Supported Variables).
+- `resource_formats` (Map of String) Which format to use for specific resource types (see Example Usage).
 
 The purpose of this attribute is to allow overrides to the format only for specific resources.
-- **slice_string** (String) A String containing strings seperated by space (see Example Usage) which can be used in the format via the `TOKEN_*` variables (see Supported Variables).
+- `slice_string` (String) A String containing strings seperated by space (see Example Usage) which can be used in the format via the `TOKEN_*` variables (see Supported Variables).
 
 The point of this attribute is so users who have a terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can simply apply it here and use parts of it in their formats.
 

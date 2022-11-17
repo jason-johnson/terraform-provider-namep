@@ -28,16 +28,16 @@ data "namep_azure_name" "example" {
 
 ### Required
 
-- **name** (String) Name to put in the `#{NAME}` location of the formats.
+- `name` (String) Name to put in the `#{NAME}` location of the formats.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **location** (String) Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.
-- **type** (String) Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).
+- `location` (String) Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.
+- `type` (String) Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).
 
 ### Read-Only
 
-- **result** (String) The name created from the format.
+- `id` (String) The ID of this resource.
+- `result` (String) The name created from the format.
 
 

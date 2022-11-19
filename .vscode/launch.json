@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "test",
             // this assumes your workspace is the root of the repo
-            "program": "./internal/provider/",
+            "program": "${fileDirname}",
             "env": {
                 "TF_ACC": "1",
             },

@@ -37,7 +37,7 @@ provider "namep" {
 - `default_location` (String) Location to use if none are specified in the data_source.
 - `default_nodash_name_format` (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
 - `default_resource_name_format` (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.
-- `extra_tokens` (Map of String) Extra variables for use in format (see Supported Variables).
+- `extra_tokens` (Map of String) Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.
 - `resource_formats` (Map of String) Which format to use for specific resource types (see Example Usage).
 
 The purpose of this attribute is to allow overrides to the format only for specific resources.

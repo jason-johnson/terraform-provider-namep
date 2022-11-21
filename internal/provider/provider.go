@@ -42,7 +42,7 @@ func New(version string) func() *schema.Provider {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Extra variables for use in format (see Supported Variables).",
+					Description: "Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.",
 					Optional:    true,
 				},
 				defaultLocationProp: {

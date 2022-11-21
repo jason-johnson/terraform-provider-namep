@@ -38,6 +38,14 @@ func dataSourceAzureName() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
+			extraTokensProp: {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).",
+				Optional:    true,
+			},
 			resultProp: {
 				Type:        schema.TypeString,
 				Description: "The name created from the format.",
@@ -63,6 +71,20 @@ func dataSourceNameRead(ctx context.Context, d *schema.ResourceData, m interface
 func calculateName(name string, d *schema.ResourceData, m interface{}) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	config, ok := m.(providerConfiguration)
+
+	extra_variables := make(map[string]string)
+
+	for k, v := range config.extra_tokens {
+		extra_variables[k] = v
+	}
+
+	extra_variables_values, ev_exists := d.GetOk(extraTokensProp)
+
+	if ev_exists {
+		for name, value := range extra_variables_values.(map[string]interface{}) {
+			extra_variables[strings.ToUpper(name)] = strings.ToLower(value.(string))
+		}
+	}
 
 	if !ok {
 		return "", diag.Errorf("panic: provider configuration was of the wrong type")
@@ -143,7 +165,7 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 			}
 			tokenResult = definition.CafPrefix
 		default:
-			tokenResult, exists = config.extra_tokens[token]
+			tokenResult, exists = extra_variables[token]
 
 			if !exists {
 				idx, hasIndex := getTokenSliceIndex(token)

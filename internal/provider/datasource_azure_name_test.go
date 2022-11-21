@@ -182,6 +182,8 @@ data "namep_azure_name" "sab" {
 	name = "sa2"
 	location = "westeurope"
 	type = "azurerm_storage_account"
-	myslug = "stacc"
+	extra_tokens = {
+		myslug = "stacc"
+	  }
   }
 `

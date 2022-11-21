@@ -32,6 +32,7 @@ data "namep_azure_name" "example" {
 
 ### Optional
 
+- `extra_tokens` (Map of String) Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).
 - `location` (String) Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.
 - `type` (String) Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).
 

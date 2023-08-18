@@ -37,6 +37,9 @@ provider "namep" {
 - `azure_resource_formats` (Map of String) Which format to use for specific azure resource types (see Example Usage).
 
 The purpose of this attribute is to allow overrides to the format only for specific resources.
+- `custom_resource_formats` (Map of String) Which format to use for specific custom resource types (see Example Usage).
+
+The purpose of this attribute is to allow creation of special custom formats for things that may not be recources.
 - `default_location` (String) Location to use if none are specified in the data_source.
 - `default_nodash_name_format` (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
 - `default_resource_name_format` (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.

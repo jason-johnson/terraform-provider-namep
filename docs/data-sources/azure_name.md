@@ -40,5 +40,3 @@ data "namep_azure_name" "example" {
 
 - `id` (String) The ID of this resource.
 - `result` (String) The name created from the format.
-
-

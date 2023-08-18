@@ -62,12 +62,12 @@ func New(version string) func() *schema.Provider {
 					Optional:    true,
 					Default:     "#{SLUG}#{SHORT_LOC}#{NAME}",
 				},
-				resourceFormatsProp: {
+				azureResourceFormatsProp: {
 					Type: schema.TypeMap,
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "Which format to use for specific resource types (see Example Usage).\n\nThe purpose of this attribute " +
+					Description: "Which format to use for specific azure resource types (see Example Usage).\n\nThe purpose of this attribute " +
 						"is to allow overrides to the format only for specific resources.",
 					Optional: true,
 				},
@@ -109,10 +109,10 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 		}
 
 		resource_formats := make(map[string]string)
-		resource_formats_schema, rf_exists := d.GetOk(resourceFormatsProp)
+		azure_resource_formats_schema, rf_exists := d.GetOk(azureResourceFormatsProp)
 
 		if rf_exists {
-			for name, value := range resource_formats_schema.(map[string]interface{}) {
+			for name, value := range azure_resource_formats_schema.(map[string]interface{}) {
 				resource_formats[name] = value.(string)
 			}
 		}

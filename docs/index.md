@@ -21,7 +21,7 @@ provider "namep" {
   extra_tokens = {
     branch = var.branch_name
   }
-  resource_formats = {
+  azure_resource_formats = {
     azurerm_resource_group = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   }
 }
@@ -34,13 +34,13 @@ provider "namep" {
 
 ### Optional
 
+- `azure_resource_formats` (Map of String) Which format to use for specific azure resource types (see Example Usage).
+
+The purpose of this attribute is to allow overrides to the format only for specific resources.
 - `default_location` (String) Location to use if none are specified in the data_source.
 - `default_nodash_name_format` (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
 - `default_resource_name_format` (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.
 - `extra_tokens` (Map of String) Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.
-- `resource_formats` (Map of String) Which format to use for specific resource types (see Example Usage).
-
-The purpose of this attribute is to allow overrides to the format only for specific resources.
 - `slice_string` (String) A String containing strings seperated by space (see Example Usage) which can be used in the format via the `TOKEN_*` variables (see Supported Variables).
 
 The point of this attribute is so users who have a terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can simply apply it here and use parts of it in their formats.
@@ -48,7 +48,7 @@ The point of this attribute is so users who have a terraform string from some ot
 ## Creating the format string
 
 The formats are made with a string consisting of static text and variables to be substituted when the name is computed.  The
-formats can be specified in `default_nodash_name_format`, `default_resource_name_format`, and `resource_formats`.  Any normal
+formats can be specified in `default_nodash_name_format`, `default_resource_name_format`, and `azure_resource_formats`.  Any normal
 text found in the string will be left as-is.  Any text start surrounded by `#{}` will be treated as a variable and substituted
 if possible.  Variables also support **optional dashes**. A variable like `#{-VAR}` will put a dash in front of the variable
 unless the value is empty.  The dash can also be after the variable name to optionally put it behind the variable instead.

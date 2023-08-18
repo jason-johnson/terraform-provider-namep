@@ -110,7 +110,7 @@ provider "namep" {
   extra_tokens = {
     branch = "uxx1"
   }
-  resource_formats = {
+  azure_resource_formats = {
     azurerm_resource_group = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   }
 }
@@ -137,7 +137,7 @@ provider "namep" {
   }
   default_resource_name_format = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   default_nodash_name_format = "#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{BRANCH}#{NAME}"
-  resource_formats = {
+  azure_resource_formats = {
     my_type = "thing-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   }
 }

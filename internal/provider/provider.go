@@ -71,6 +71,15 @@ func New(version string) func() *schema.Provider {
 						"is to allow overrides to the format only for specific resources.",
 					Optional: true,
 				},
+				customResourceFormatsProp: {
+					Type: schema.TypeMap,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "Which format to use for specific custom resource types (see Example Usage).\n\nThe purpose of this attribute " +
+						"is to allow creation of special custom formats for things that may not be recources.",
+					Optional: true,
+				},
 			},
 			DataSourcesMap: map[string]*schema.Resource{
 				"namep_azure_name": dataSourceAzureName(),

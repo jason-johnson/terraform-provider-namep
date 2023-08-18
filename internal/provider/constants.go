@@ -6,7 +6,16 @@ const defaultLocationProp string = "default_location"
 const defaultResourceNameFormatProp string = "default_resource_name_format"
 const defaultNodashNameFormatProp string = "default_nodash_name_format"
 const azureResourceFormatsProp string = "azure_resource_formats"
+const customResourceFormatsProp string = "custom_resource_formats"
 const nameProp string = "name"
 const typeProp string = "type"
 const locationProp string = "location"
 const resultProp string = "result"
+
+type ResourceFormatType int64
+
+const (
+	Undefined ResourceFormatType = iota
+	Azure
+	Custom
+)

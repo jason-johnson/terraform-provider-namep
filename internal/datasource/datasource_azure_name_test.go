@@ -3,32 +3,31 @@ package datasource
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+
+	"registry.terraform.io/jason-johnson/namep/internal/provider"
 )
 
 func TestAccDataSourceAzureName_default_dashed(t *testing.T) {
-	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_default_rg,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.namep_azure_name.foo", "result", "rg-weu-mygroup"),
-				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.namep_azure_name.foo", "result", "rg-weu-mygroup")),
 			},
 		},
 	})
 }
 
 func TestAccDataSourceAzureName_default_nodash(t *testing.T) {
-	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_default_sa,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.foo", "result", "stweumyacct"),
 				),
 			},
@@ -37,13 +36,12 @@ func TestAccDataSourceAzureName_default_nodash(t *testing.T) {
 }
 
 func TestAccDataSourceAzureName_custom_rg_fmt(t *testing.T) {
-	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_custom_rg_fmt,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "myapp-dev-weu-uxx1-mygroup"),
 					resource.TestCheckResourceAttr("data.namep_azure_name.wapp", "result", "app-weu-myapp"),
 				),
@@ -53,13 +51,12 @@ func TestAccDataSourceAzureName_custom_rg_fmt(t *testing.T) {
 }
 
 func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
-	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_custom_type_fmt,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "myapp-dev-weu-uxx1-mygroup"),
 					resource.TestCheckResourceAttr("data.namep_azure_name.custom", "result", "thing-dev-weu-uxx1-mycustom"),
 				),
@@ -69,13 +66,12 @@ func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
 }
 
 func TestAccDataSourceAzureName_override_extra_token(t *testing.T) {
-	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_override_extra_token,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "rg-myapp-dev-weu-mygroup"),
 					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "unsetmyappdevweusa1"),
 					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "staccmyappdevweusa2"),

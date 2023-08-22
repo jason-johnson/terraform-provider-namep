@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
 var (
@@ -63,7 +62,8 @@ type NamepConfig struct {
 	default_location             string
 	default_resource_name_format string
 	default_nodash_name_format   string
-	resource_formats             map[string]string
+	azure_resource_formats       map[string]string
+	custom_resource_formats      map[string]string
 }
 
 func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -126,6 +126,10 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	var npConfig NamepConfig
 
+	npConfig.default_location = config.default_location.ValueString()
+	npConfig.default_resource_name_format = config.default_resource_name_format.ValueString()
+	npConfig.default_nodash_name_format = config.default_nodash_name_format.ValueString()
+
 	if config.slice_string.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root(sliceStringProp),
@@ -164,16 +168,24 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	npConfig.extra_variables = extra_variables
 
-	azure_resource_formats := make(map[string]types.String, len(config.azure_resource_formats.Elements()))
+	azure_resource_formats := make(map[string]string, len(config.azure_resource_formats.Elements()))
 	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &azure_resource_formats, false)...)
+
+	npConfig.azure_resource_formats = azure_resource_formats
+
+	custom_resource_formats := make(map[string]string, len(config.custom_resource_formats.Elements()))
+	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &custom_resource_formats, false)...)
+
+	npConfig.custom_resource_formats = custom_resource_formats
+
+	resp.DataSourceData = npConfig
+	resp.ResourceData = npConfig
 }
 
 func (p *namepProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-	}
+	return []func() datasource.DataSource{}
 }
 
 func (p *namepProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-	}
+	return []func() resource.Resource{}
 }

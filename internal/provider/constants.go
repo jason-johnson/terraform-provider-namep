@@ -11,11 +11,3 @@ const nameProp string = "name"
 const typeProp string = "type"
 const locationProp string = "location"
 const resultProp string = "result"
-
-type ResourceFormatType int64
-
-const (
-	Undefined ResourceFormatType = iota
-	Azure
-	Custom
-)

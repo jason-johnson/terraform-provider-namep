@@ -1,61 +1,94 @@
-package provider
+package datasource
 
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
+	"go/types"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func dataSourceAzureName() *schema.Resource {
-	return &schema.Resource{
-		Description: "`namep_azure_name` defines a name for an azure resource.\n\n" +
-			"The format will be used based on the the resource type selected and the appropriate format string.",
+// Ensure the implementation satisfies the expected interfaces.
+var (
+    _ datasource.DataSource              = &azureNameDataSource{}
+    _ datasource.DataSourceWithConfigure = &azureNameDataSource{}
+)
 
-		ReadContext: dataSourceNameRead,
-
-		Schema: map[string]*schema.Schema{
-			nameProp: {
-				Type:        schema.TypeString,
-				Description: "Name to put in the `#{NAME}` location of the formats.",
-				ForceNew:    true,
-				Required:    true,
-			},
-			typeProp: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Description:      "Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).",
-				ValidateDiagFunc: stringIsValidResourceName(ResourceDefinitions),
-				ForceNew:         true,
-			},
-			locationProp: {
-				Type:        schema.TypeString,
-				Description: "Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.",
-				Optional:    true,
-				ForceNew:    true,
-			},
-			extraTokensProp: {
-				Type: schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Description: "Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).",
-				Optional:    true,
-			},
-			resultProp: {
-				Type:        schema.TypeString,
-				Description: "The name created from the format.",
-				Computed:    true,
-			},
-		},
-	}
+// New is a helper function to simplify the provider implementation.
+func New() datasource.DataSource {
+    return &azureNameDataSource{}
 }
 
-func dataSourceNameRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// data source implementation.
+type azureNameDataSource struct{
+	config *NamepConfig
+}
+
+type azureNameDataSourceModel struct {
+	name types.String `tfsdk:"name"`
+	resourceType types.String `tfsdk:"type"`
+	location types.String `tfsdk:"location"`
+	extraTokens types.Map `tfsdk:"extra_tokens"`
+	result types.String `tfsdk:"result"`
+}
+
+func (d *azureNameDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_azure_name"
+}
+
+// Schema defines the schema for the data source.
+func (d *azureNameDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+    resp.Schema = schema.Schema{
+			Attributes: map[string]schema.Attribute{
+				nameProp: schema.StringAttribute{
+					Description: "Name to put in the `#{NAME}` location of the formats.",
+					Required:    true,
+				},
+				typeProp: schema.StringAttribute{
+					Optional:         true,
+					Description:      "Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).",
+					Validators: []schema.ValueValidator{
+						stringIsValidResourceName(azure.ResourceDefinitions),
+					},
+				},
+				locationProp: schema.StringAttribute{
+					Description: "Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.",
+					Optional:    true,
+				},
+				extraTokensProp: schema.MapAttribute{
+					ElementType: types.StringType,
+					Description: "Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).",
+					Optional:    true,
+				},
+				resultProp: schema.StringAttribute{
+					Description: "The name created from the format.",
+					Computed:    true,
+				},
+			},}
+}
+
+func (d *azureNameDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+    if req.ProviderData == nil {
+        return
+    }
+
+    config, ok := req.ProviderData.(*NamepConfig)
+    if !ok {
+        resp.Diagnostics.AddError(
+            "Unexpected Data Source Configure Type",
+            fmt.Sprintf("Expected *NamepConfig, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+        )
+
+        return
+    }
+
+    d.config = config
+}
+
+// Read refreshes the Terraform state with the latest data.
+func (d *azureNameDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	name := d.Get(nameProp).(string)
 
 	result, diag := calculateName(name, d, m)
@@ -67,6 +100,7 @@ func dataSourceNameRead(ctx context.Context, d *schema.ResourceData, m interface
 
 	return diag
 }
+
 
 func calculateName(name string, d *schema.ResourceData, m interface{}) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics

@@ -1,5 +1,6 @@
 // The following directive is necessary to make the package coherent:
 
+//go:build ignore
 // +build ignore
 
 // This program generates model_locations_generated.go. It can be invoked by running
@@ -10,7 +11,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -40,7 +40,7 @@ func main() {
 	}
 	fmt.Println()
 
-	templateBytes, err := ioutil.ReadFile(path.Join(wd, "tools/templates/locationsModel.tmpl"))
+	templateBytes, err := os.ReadFile(path.Join(wd, "tools/azure/templates/locationsModel.tmpl"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sourceDefinitions, err := ioutil.ReadFile(path.Join(wd, "tools/data/locationDefinitions.json"))
+	sourceDefinitions, err := os.ReadFile(path.Join(wd, "tools/azure/data/locationDefinitions.json"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func main() {
 		return data[i].DefinitionName < data[j].DefinitionName
 	})
 
-	modelsFile, err := os.OpenFile(path.Join(wd, "internal/provider/model_locations_generated.go"), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	modelsFile, err := os.OpenFile(path.Join(wd, "internal/cloud/azure/model_locations_generated.go"), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

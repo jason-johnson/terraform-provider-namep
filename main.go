@@ -17,8 +17,8 @@ import (
 //go:generate terraform fmt -recursive ./examples/
 
 // Generate the model files
-//go:generate go run tools/genLocations.go
-//go:generate go run tools/gen.go
+//go:generate go run tools/azure/genLocations.go
+//go:generate go run tools/azure/gen.go
 
 // Run the docs generation tool, check its repository for more information on how it works and how docs
 // can be customized.

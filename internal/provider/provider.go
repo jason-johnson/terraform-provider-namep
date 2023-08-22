@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"registry.terraform.io/jason-johnson/namep/internal/utils"
 )
 
 var (
@@ -56,14 +58,14 @@ type namepProviderModel struct {
 }
 
 type NamepConfig struct {
-	slice_tokens                 []string
-	slice_tokens_available       int
-	extra_variables              map[string]string
-	default_location             string
-	default_resource_name_format string
-	default_nodash_name_format   string
-	azure_resource_formats       map[string]string
-	custom_resource_formats      map[string]string
+	SliceTokens               []string
+	SliceTokensAvailable      int
+	ExtraVariables            map[string]string
+	DefaultLocation           string
+	DefaultResourceNameFormat string
+	DefaultNodashNameFormat   string
+	AzureResourceFormats      map[string]string
+	CustomResourceFormats     map[string]string
 }
 
 func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -126,57 +128,35 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	var npConfig NamepConfig
 
-	npConfig.default_location = config.default_location.ValueString()
-	npConfig.default_resource_name_format = config.default_resource_name_format.ValueString()
-	npConfig.default_nodash_name_format = config.default_nodash_name_format.ValueString()
+	npConfig.DefaultLocation = config.default_location.ValueString()
+	npConfig.DefaultResourceNameFormat = config.default_resource_name_format.ValueString()
+	npConfig.DefaultNodashNameFormat = config.default_nodash_name_format.ValueString()
 
-	if config.slice_string.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root(sliceStringProp),
-			"Unknown slice_string",
-			"The provider cannot create names as there is an unknown configuration value for the slice_string. "+
-				"Either target apply the source of the value first or set the value statically in the configuration.",
-		)
-	}
+	utils.CheckUnknown(sliceStringProp, config.slice_string, &resp.Diagnostics, path.Root(sliceStringProp))
 
-	npConfig.slice_tokens = strings.Fields(config.slice_string.ValueString())
+	npConfig.SliceTokens = strings.Fields(config.slice_string.ValueString())
 
-	if config.extra_tokens.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root(extraTokensProp),
-			"Unknown extra_tokens",
-			"The provider cannot create names as there is an unknown configuration value for the extra_tokens. "+
-				"Either target apply the source of the value first or set the value statically in the configuration.",
-		)
-	}
+	utils.CheckUnknown(extraTokensProp, config.extra_tokens, &resp.Diagnostics, path.Root(extraTokensProp))
 
 	extra_variables := make(map[string]string, len(config.extra_tokens.Elements()))
 
 	for key, value := range config.extra_tokens.Elements() {
-		if value.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root(extraTokensProp).AtMapKey(key),
-				fmt.Sprintf("Unknown: %s.%s)", extraTokensProp, key),
-				fmt.Sprintf("The provider cannot create names as there is an unknown configuration value for %s.%s. "+
-					"Either target apply the source of the value first or set the value statically in the configuration.",
-					extraTokensProp, key),
-			)
-		}
+		utils.CheckUnknown(fmt.Sprintf("%s.%s)", extraTokensProp, key), value, &resp.Diagnostics, path.Root(extraTokensProp).AtMapKey(key))
 
 		extra_variables[strings.ToUpper(key)] = value.String()
 	}
 
-	npConfig.extra_variables = extra_variables
+	npConfig.ExtraVariables = extra_variables
 
 	azure_resource_formats := make(map[string]string, len(config.azure_resource_formats.Elements()))
 	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &azure_resource_formats, false)...)
 
-	npConfig.azure_resource_formats = azure_resource_formats
+	npConfig.AzureResourceFormats = azure_resource_formats
 
 	custom_resource_formats := make(map[string]string, len(config.custom_resource_formats.Elements()))
 	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &custom_resource_formats, false)...)
 
-	npConfig.custom_resource_formats = custom_resource_formats
+	npConfig.CustomResourceFormats = custom_resource_formats
 
 	resp.DataSourceData = npConfig
 	resp.ResourceData = npConfig

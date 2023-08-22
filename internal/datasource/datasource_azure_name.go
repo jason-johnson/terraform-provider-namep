@@ -3,161 +3,172 @@ package datasource
 import (
 	"context"
 	"fmt"
-	"go/types"
+	"maps"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"registry.terraform.io/jason-johnson/namep/internal/cloud/azure"
+	"registry.terraform.io/jason-johnson/namep/internal/provider"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-    _ datasource.DataSource              = &azureNameDataSource{}
-    _ datasource.DataSourceWithConfigure = &azureNameDataSource{}
+	_ datasource.DataSource              = &azureNameDataSource{}
+	_ datasource.DataSourceWithConfigure = &azureNameDataSource{}
 )
 
 // New is a helper function to simplify the provider implementation.
 func New() datasource.DataSource {
-    return &azureNameDataSource{}
+	return &azureNameDataSource{}
 }
 
 // data source implementation.
-type azureNameDataSource struct{
-	config *NamepConfig
+type azureNameDataSource struct {
+	config *provider.NamepConfig
 }
 
 type azureNameDataSourceModel struct {
-	name types.String `tfsdk:"name"`
+	ID           types.String `tfsdk:"id"`
+	name         types.String `tfsdk:"name"`
 	resourceType types.String `tfsdk:"type"`
-	location types.String `tfsdk:"location"`
-	extraTokens types.Map `tfsdk:"extra_tokens"`
-	result types.String `tfsdk:"result"`
+	location     types.String `tfsdk:"location"`
+	extraTokens  types.Map    `tfsdk:"extra_tokens"`
+	result       types.String `tfsdk:"result"`
 }
 
 func (d *azureNameDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-    resp.TypeName = req.ProviderTypeName + "_azure_name"
+	resp.TypeName = req.ProviderTypeName + "_azure_name"
 }
 
 // Schema defines the schema for the data source.
 func (d *azureNameDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-    resp.Schema = schema.Schema{
-			Attributes: map[string]schema.Attribute{
-				nameProp: schema.StringAttribute{
-					Description: "Name to put in the `#{NAME}` location of the formats.",
-					Required:    true,
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
+			nameProp: schema.StringAttribute{
+				Description: "Name to put in the `#{NAME}` location of the formats.",
+				Required:    true,
+			},
+			typeProp: schema.StringAttribute{
+				Optional:    true,
+				Description: "Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).",
+				Validators: []validator.String{
+					stringInResourceMap(),
 				},
-				typeProp: schema.StringAttribute{
-					Optional:         true,
-					Description:      "Type of resource to create a name for (resource name used by terraform, required for `#{SLUG}`).",
-					Validators: []schema.ValueValidator{
-						stringIsValidResourceName(azure.ResourceDefinitions),
-					},
-				},
-				locationProp: schema.StringAttribute{
-					Description: "Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.",
-					Optional:    true,
-				},
-				extraTokensProp: schema.MapAttribute{
-					ElementType: types.StringType,
-					Description: "Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).",
-					Optional:    true,
-				},
-				resultProp: schema.StringAttribute{
-					Description: "The name created from the format.",
-					Computed:    true,
-				},
-			},}
+			},
+			locationProp: schema.StringAttribute{
+				Description: "Value to use for the `#{LOC}` portion of the format.  Also used to compute `#{SHORT_LOC}` and `#{ALT_SHORT_LOC}`.",
+				Optional:    true,
+			},
+			extraTokensProp: schema.MapAttribute{
+				ElementType: types.StringType,
+				Description: "Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).",
+				Optional:    true,
+			},
+			resultProp: schema.StringAttribute{
+				Description: "The name created from the format.",
+				Computed:    true,
+			},
+		}}
 }
 
 func (d *azureNameDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-    if req.ProviderData == nil {
-        return
-    }
+	if req.ProviderData == nil {
+		return
+	}
 
-    config, ok := req.ProviderData.(*NamepConfig)
-    if !ok {
-        resp.Diagnostics.AddError(
-            "Unexpected Data Source Configure Type",
-            fmt.Sprintf("Expected *NamepConfig, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-        )
+	config, ok := req.ProviderData.(*provider.NamepConfig)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *NamepConfig, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
 
-        return
-    }
+		return
+	}
 
-    d.config = config
+	d.config = config
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (d *azureNameDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	name := d.Get(nameProp).(string)
+	var config azureNameDataSourceModel
 
-	result, diag := calculateName(name, d, m)
-
-	if !diag.HasError() {
-		d.Set(resultProp, result)
-		d.SetId(name)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	return diag
+	name := calculateName(config.name.ValueString(), *d.config, config, &resp.Diagnostics)
+
+	config.ID = types.StringValue(name)
+	config.result = types.StringValue(name)
+
+	// Write logs using the tflog package
+	// Documentation: https://terraform.io/plugin/log
+	tflog.Trace(ctx, "read azure name data source")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-
-func calculateName(name string, d *schema.ResourceData, m interface{}) (string, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	config, ok := m.(providerConfiguration)
-
+func calculateName(name string, providerConfig provider.NamepConfig, config azureNameDataSourceModel, diags *diag.Diagnostics) string {
 	extra_variables := make(map[string]string)
 
-	for k, v := range config.extra_tokens {
-		extra_variables[k] = v
+	maps.Copy(extra_variables, providerConfig.ExtraVariables)
+
+	for name, value := range config.extraTokens.Elements() {
+		extra_variables[strings.ToUpper(name)] = value.String()
 	}
 
-	extra_variables_values, ev_exists := d.GetOk(extraTokensProp)
+	var location string
 
-	if ev_exists {
-		for name, value := range extra_variables_values.(map[string]interface{}) {
-			extra_variables[strings.ToUpper(name)] = strings.ToLower(value.(string))
-		}
-	}
-
-	if !ok {
-		return "", diag.Errorf("panic: provider configuration was of the wrong type")
-	}
-	location, diags := getValue(locationProp, d, config.default_location, diags)
-
-	if diags.HasError() {
-		return "", diags
+	if config.location.IsNull() {
+		location = providerConfig.DefaultLocation
+	} else {
+		location = config.location.ValueString()
 	}
 
 	re := regexp.MustCompile(`#\{-?\w+-?}`)
 
-	name_type := d.Get(typeProp).(string)
-
-	if name_type == "" {
+	var name_type string
+	if config.name.IsNull() || config.name.ValueString() == "" {
 		name_type = "general"
+	} else {
+		name_type = config.resourceType.ValueString()
 	}
 
-	definition, exists := ResourceDefinitions[name_type]
+	definition, exists := azure.ResourceDefinitions[name_type]
 
 	var format string
 
 	if !exists {
-		format, exists = config.resource_formats[name_type]
+		format, exists = providerConfig.AzureResourceFormats[name_type]
 
 		if !exists {
-			diags = appendError(diags, fmt.Sprintf("resource type %q unknown to module", name_type))
-			return "", diags
+			diags.AddError("resource type", fmt.Sprintf("resource type %q unknown to provider", name_type))
+			return "FAILED"
 		}
 	} else {
-		format, diags = getFormatString(d, config, definition, diags)
+		format = getFormatString(providerConfig, definition)
 	}
 
-	locationDefinition, locsOk := LocationDefinitions[location]
+	locationDefinition, locsOk := azure.LocationDefinitions[location]
 
 	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {
 		tl := len(token)
 		if tl < 1 {
-			diags = appendError(diags, fmt.Sprintf("bizarre token received %q", token))
+			diags.AddError("parse", fmt.Sprintf("bizarre token received %q", token))
 			return token
 		}
 
@@ -167,10 +178,10 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 
 		switch token {
 		case "LOC":
-			tokenResult = location
+			tokenResult = location // TODO: location could be "", check that
 		case "SHORT_LOC":
 			if !locsOk {
-				diags = appendError(diags, fmt.Sprintf("SHORT_LOC used but no short map for location %q", location))
+				diags.AddError("parse", fmt.Sprintf("SHORT_LOC used but no short map for location %q", location))
 				tokenProcessed = false
 				tokenResult = location
 			} else {
@@ -178,7 +189,7 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 			}
 		case "ALT_SHORT_LOC":
 			if !locsOk {
-				diags = appendError(diags, fmt.Sprintf("ALT_SHORT_LOC used but no short map for location %q", location))
+				diags.AddError("parse", fmt.Sprintf("ALT_SHORT_LOC used but no short map for location %q", location))
 				tokenProcessed = false
 				tokenResult = location
 			} else {
@@ -190,10 +201,10 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 		case "SLUG":
 			if definition.CafPrefix == "" {
 				if name_type == "general" {
-					diags = appendError(diags, fmt.Sprintf("resource type must be defined to use SLUG (format: %s)", format))
+					diags.AddError("parse", fmt.Sprintf("resource type must be defined to use SLUG (format: %s)", format))
 					tokenProcessed = false
 				} else {
-					diags = appendError(diags, fmt.Sprintf("no slug defined for resource type '%s'", name_type))
+					diags.AddError("parse", fmt.Sprintf("no slug defined for resource type '%s'", name_type))
 					tokenProcessed = false
 				}
 			}
@@ -205,15 +216,15 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 				idx, hasIndex := getTokenSliceIndex(token)
 
 				if hasIndex {
-					if idx >= config.slice_tokens_available {
-						diags = appendError(diags, fmt.Sprintf("invalid slice index used ('%s') in format", token))
+					if idx >= providerConfig.SliceTokensAvailable {
+						diags.AddError("parse", fmt.Sprintf("invalid slice index used ('%s') in format", token))
 						tokenProcessed = false
 						tokenResult = fmt.Sprintf("${%s}", token)
 					} else {
-						tokenResult = strings.ToLower(config.slice_tokens[idx])
+						tokenResult = strings.ToLower(providerConfig.SliceTokens[idx])
 					}
 				} else {
-					diags = appendError(diags, fmt.Sprintf("unknown token '%s' in format", token))
+					diags.AddError("parse", fmt.Sprintf("unknown token '%s' in format", token))
 					tokenProcessed = false
 					tokenResult = fmt.Sprintf("${%s}", token)
 				}
@@ -230,9 +241,9 @@ func calculateName(name string, d *schema.ResourceData, m interface{}) (string, 
 		return tokenResult
 	})
 
-	diags = validateResult(result, definition, diags)
+	validateResult(result, definition, diags)
 
-	return result, diags
+	return result
 }
 
 func preprocessToken(token string) (result string, pre bool, post bool) {
@@ -270,38 +281,25 @@ func getTokenSliceIndex(token string) (int, bool) {
 	return result - 1, true
 }
 
-func getValue(field string, d *schema.ResourceData, defaultResult string, diags diag.Diagnostics) (string, diag.Diagnostics) {
-	result := d.Get(field).(string)
-
-	if result == "" {
-		if defaultResult == "" {
-			diags = appendError(diags, fmt.Sprintf("%s must be supplied as default or in the resource", field))
-			return "", diags
-		}
-		return defaultResult, diags
-	}
-	return result, diags
-}
-
-func getFormatString(d *schema.ResourceData, config providerConfiguration, def ResourceStructure, diags diag.Diagnostics) (string, diag.Diagnostics) {
-	format, exists := config.resource_formats[def.ResourceTypeName]
+func getFormatString(config provider.NamepConfig, def azure.ResourceStructure) string {
+	format, exists := config.AzureResourceFormats[def.ResourceTypeName]
 
 	if !exists {
 		if def.Dashes {
-			format = config.default_resource_name_format
+			format = config.DefaultResourceNameFormat
 		} else {
-			format = config.default_nodash_name_format
+			format = config.DefaultNodashNameFormat
 		}
 	}
 
-	return format, diags
+	return format
 }
 
-func validateResult(result string, definition ResourceStructure, diags diag.Diagnostics) diag.Diagnostics {
+func validateResult(result string, definition azure.ResourceStructure, diags *diag.Diagnostics) {
 	errorSeen := false
 
 	if definition.LowerCase && strings.ToLower(result) != result {
-		diags = appendError(diags, fmt.Sprintf("resulting name must be lowercase: %s", result))
+		diags.AddError("validate", fmt.Sprintf("resulting name must be lowercase: %s", result))
 		errorSeen = true
 	}
 
@@ -310,16 +308,14 @@ func validateResult(result string, definition ResourceStructure, diags diag.Diag
 	if !validName.MatchString(result) {
 
 		if len(result) > definition.MaxLength {
-			diags = appendError(diags, fmt.Sprintf("resulting name is too long (%d > %d): %s", len(result), definition.MaxLength, result))
+			diags.AddError("validate", fmt.Sprintf("resulting name is too long (%d > %d): %s", len(result), definition.MaxLength, result))
 			errorSeen = true
 		}
 
 		// NOTE: Regex will generally catch everything but not tell us what's wrong so we only show it if
 		// NOTE: nothing else was a problem.  This could hide an error with the string until the other issues are fixed
 		if !errorSeen {
-			diags = appendError(diags, fmt.Sprintf("resulting name is invalid (validation regex: %s): %s", definition.ValidationRegExp, result))
+			diags.AddError("validate", fmt.Sprintf("resulting name is invalid (validation regex: %s): %s", definition.ValidationRegExp, result))
 		}
 	}
-
-	return diags
 }

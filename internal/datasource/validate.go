@@ -1,56 +1,58 @@
 package datasource
 
 import (
-	"errors"
+	"context"
 	"fmt"
 
 	"github.com/agext/levenshtein"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"golang.org/x/exp/maps"
+
+	"registry.terraform.io/jason-johnson/namep/internal/cloud/azure"
 )
 
-// Annoyingly there is no way in Go to just ignore the map value type even though we don't use it
-func resourceStructureToKeysSlice(m map[string]ResourceStructure) []string {
-	mapKeys := make([]string, 0, len(m))
-	for k := range m {
-		mapKeys = append(mapKeys, k)
-	}
+type stringInResourceMapValidator struct{}
 
-	return mapKeys
+func stringInResourceMap() stringInResourceMapValidator {
+	return stringInResourceMapValidator{}
 }
 
-func stringIsValidResourceName(m map[string]ResourceStructure) schema.SchemaValidateDiagFunc {
-	valid := resourceStructureToKeysSlice(m)
+func (v stringInResourceMapValidator) Description(ctx context.Context) string {
+	return "string must must be present in the defined Azure Resource definitions"
+}
 
-	return func(i interface{}, path cty.Path) (diags diag.Diagnostics) {
+// MarkdownDescription returns a markdown formatted description of the validator's behavior, suitable for a practitioner to understand its impact.
+func (v stringInResourceMapValidator) MarkdownDescription(ctx context.Context) string {
+	return "string must must be present in the defined Azure Resource definitions"
+}
 
-		v, ok := i.(string)
-		if !ok {
-			err := path.NewError(errors.New("expected type of be string"))
-
-			return diag.FromErr(err)
-		}
-
-		for _, str := range valid {
-			if v == str {
-				return diags
-			}
-		}
-
-		suggestion := NameSuggestion(v, valid)
-		warning := fmt.Sprintf("type %q not found in resources, some variables may not work", v)
-
-		if suggestion != "" {
-			warning = fmt.Sprintf("type %q not found in resources, did you mean %q?", v, suggestion)
-		}
-
-		return append(diags, diag.Diagnostic{
-			Severity:      diag.Warning,
-			Summary:       warning,
-			AttributePath: path,
-		})
+func (v stringInResourceMapValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	// If the value is unknown or null, there is nothing to validate.
+	if req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull() {
+		return
 	}
+
+	valid := maps.Keys(azure.ResourceDefinitions)
+	s := req.ConfigValue.ValueString()
+
+	for _, str := range valid {
+		if s == str {
+			return
+		}
+	}
+
+	suggestion := NameSuggestion(s, valid)
+	warning := fmt.Sprintf("type %q not found in resources, some variables may not work", v)
+
+	if suggestion != "" {
+		warning = fmt.Sprintf("type %q not found in resources, did you mean %q?", v, suggestion)
+	}
+
+	resp.Diagnostics.AddAttributeWarning(
+		req.Path,
+		"Unknown Azure Resource Type",
+		warning,
+	)
 }
 
 func NameSuggestion(given string, suggestions []string) string {

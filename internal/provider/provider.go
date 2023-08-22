@@ -5,11 +5,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func init() {
+var (
+	_ provider.Provider = &namepProvider{}
+)
+
+/* func init() {
 	// Set descriptions to support markdown syntax, this will be used in document generation
 	// and the language server.
 	schema.DescriptionKind = schema.StringMarkdown
@@ -23,119 +32,148 @@ func init() {
 		}
 		return strings.TrimSpace(desc)
 	}
-}
+} */
 
-func New(version string) func() *schema.Provider {
-	return func() *schema.Provider {
-		p := &schema.Provider{
-			Schema: map[string]*schema.Schema{
-				sliceStringProp: {
-					Type: schema.TypeString,
-					Description: "A String containing strings seperated by space (see Example Usage) which can be used in the format via " +
-						"the `TOKEN_*` variables (see Supported Variables).\n\nThe point of this attribute is so users who have a " +
-						"terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can " +
-						"simply apply it here and use parts of it in their formats.",
-					Optional: true,
-				},
-				extraTokensProp: {
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-					Description: "Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.",
-					Optional:    true,
-				},
-				defaultLocationProp: {
-					Type:        schema.TypeString,
-					Description: "Location to use if none are specified in the data_source.",
-					Optional:    true,
-				},
-				defaultResourceNameFormatProp: {
-					Type:        schema.TypeString,
-					Description: "Default format to use for resources which can have dashes.",
-					Optional:    true,
-					Default:     "#{SLUG}-#{SHORT_LOC}-#{NAME}",
-				},
-				defaultNodashNameFormatProp: {
-					Type:        schema.TypeString,
-					Description: "Default format to use for resources which can not have dashes.",
-					Optional:    true,
-					Default:     "#{SLUG}#{SHORT_LOC}#{NAME}",
-				},
-				azureResourceFormatsProp: {
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-					Description: "Which format to use for specific azure resource types (see Example Usage).\n\nThe purpose of this attribute " +
-						"is to allow overrides to the format only for specific resources.",
-					Optional: true,
-				},
-				customResourceFormatsProp: {
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-					Description: "Which format to use for specific custom resource types (see Example Usage).\n\nThe purpose of this attribute " +
-						"is to allow creation of special custom formats for things that may not be recources.",
-					Optional: true,
-				},
-			},
-			DataSourcesMap: map[string]*schema.Resource{
-				"namep_azure_name": dataSourceAzureName(),
-			},
+func New(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &namepProvider{
+			version: version,
 		}
-
-		p.ConfigureContextFunc = configure(version, p)
-
-		return p
 	}
 }
 
-type providerConfiguration struct {
+type namepProvider struct {
+	version string
+}
+
+type namepProviderModel struct {
+	slice_string                 types.String `tfsdk:"slice_string"`
+	default_location             types.String `tfsdk:"default_location"`
+	default_resource_name_format types.String `tfsdk:"default_resource_name_format"`
+	default_nodash_name_format   types.String `tfsdk:"default_nodash_name_format"`
+	azure_resource_formats       types.Map    `tfsdk:"azure_resource_formats"`
+	custom_resource_formats      types.Map    `tfsdk:"custom_resource_formats"`
+	extra_tokens                 types.Map    `tfsdk:"extra_tokens"`
+}
+
+type NamepConfig struct {
+	slice_tokens                 []string
+	slice_tokens_available       int
+	extra_variables              map[string]string
 	default_location             string
 	default_resource_name_format string
 	default_nodash_name_format   string
 	resource_formats             map[string]string
-	extra_tokens                 map[string]string
-	slice_tokens_available       int
-	slice_tokens                 []string
 }
 
-func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(ctx context.Context, d *schema.ResourceData) (result interface{}, diags diag.Diagnostics) {
-		slice_string := d.Get(sliceStringProp).(string)
+func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "namep"
+	resp.Version = p.version
+}
 
-		slice_tokens := strings.Fields(slice_string)
+func (p *namepProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			sliceStringProp: schema.StringAttribute{
+				Description: "A String containing strings seperated by space (see Example Usage) which can be used in the format via " +
+					"the `TOKEN_*` variables (see Supported Variables).\n\nThe point of this attribute is so users who have a " +
+					"terraform string from some other resource (e.g. `subscription_name`) don't have to pre-process it but can " +
+					"simply apply it here and use parts of it in their formats.",
+				Optional: true,
+			},
+			extraTokensProp: schema.MapAttribute{
+				ElementType: types.StringType,
+				Description: "Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.",
+				Optional:    true,
+			},
+			defaultLocationProp: schema.StringAttribute{
+				Description: "Location to use if none are specified in the data_source.",
+				Optional:    true,
+			},
+			defaultResourceNameFormatProp: schema.StringAttribute{
+				Description: "Default format to use for resources which can have dashes.",
+				Optional:    true,
+				//Default:     "#{SLUG}-#{SHORT_LOC}-#{NAME}",
+			},
+			defaultNodashNameFormatProp: schema.StringAttribute{
+				Description: "Default format to use for resources which can not have dashes.",
+				Optional:    true,
+				//Default:     "#{SLUG}#{SHORT_LOC}#{NAME}",
+			},
+			azureResourceFormatsProp: schema.MapAttribute{
+				ElementType: types.StringType,
+				Description: "Which format to use for specific azure resource types (see Example Usage).\n\nThe purpose of this attribute " +
+					"is to allow overrides to the format only for specific resources.",
+				Optional: true,
+			},
+			customResourceFormatsProp: schema.MapAttribute{
+				ElementType: types.StringType,
+				Description: "Which format to use for specific custom resource types (see Example Usage).\n\nThe purpose of this attribute " +
+					"is to allow creation of special custom formats for things that may not be recources.",
+				Optional: true,
+			},
+		},
+	}
+}
 
-		extra_tokens := make(map[string]string)
-		extra_tokens_values, et_exists := d.GetOk(extraTokensProp)
+func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	// Retrieve provider data from configuration
+	var config namepProviderModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		if et_exists {
-			for name, value := range extra_tokens_values.(map[string]interface{}) {
-				extra_tokens[strings.ToUpper(name)] = strings.ToLower(value.(string))
-			}
+	var npConfig NamepConfig
+
+	if config.slice_string.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(sliceStringProp),
+			"Unknown slice_string",
+			"The provider cannot create names as there is an unknown configuration value for the slice_string. "+
+				"Either target apply the source of the value first or set the value statically in the configuration.",
+		)
+	}
+
+	npConfig.slice_tokens = strings.Fields(config.slice_string.ValueString())
+
+	if config.extra_tokens.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(extraTokensProp),
+			"Unknown extra_tokens",
+			"The provider cannot create names as there is an unknown configuration value for the extra_tokens. "+
+				"Either target apply the source of the value first or set the value statically in the configuration.",
+		)
+	}
+
+	extra_variables := make(map[string]string, len(config.extra_tokens.Elements()))
+
+	for key, value := range config.extra_tokens.Elements() {
+		if value.IsUnknown() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root(extraTokensProp).AtMapKey(key),
+				fmt.Sprintf("Unknown: %s.%s)", extraTokensProp, key),
+				fmt.Sprintf("The provider cannot create names as there is an unknown configuration value for %s.%s. "+
+					"Either target apply the source of the value first or set the value statically in the configuration.",
+					extraTokensProp, key),
+			)
 		}
 
-		resource_formats := make(map[string]string)
-		azure_resource_formats_schema, rf_exists := d.GetOk(azureResourceFormatsProp)
+		extra_variables[strings.ToUpper(key)] = value.String()
+	}
 
-		if rf_exists {
-			for name, value := range azure_resource_formats_schema.(map[string]interface{}) {
-				resource_formats[name] = value.(string)
-			}
-		}
+	npConfig.extra_variables = extra_variables
 
-		result = providerConfiguration{
-			slice_tokens:                 slice_tokens,
-			extra_tokens:                 extra_tokens,
-			default_location:             d.Get(defaultLocationProp).(string),
-			default_resource_name_format: d.Get(defaultResourceNameFormatProp).(string),
-			default_nodash_name_format:   d.Get(defaultNodashNameFormatProp).(string),
-			resource_formats:             resource_formats,
-			slice_tokens_available:       len(slice_tokens),
-		}
+	azure_resource_formats := make(map[string]types.String, len(config.azure_resource_formats.Elements()))
+	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &azure_resource_formats, false)...)
+}
 
-		return result, diags
+func (p *namepProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+	}
+}
+
+func (p *namepProvider) Resources(_ context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
 	}
 }

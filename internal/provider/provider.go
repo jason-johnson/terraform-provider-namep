@@ -49,13 +49,13 @@ type namepProvider struct {
 }
 
 type namepProviderModel struct {
-	slice_string                 types.String `tfsdk:"slice_string"`
-	default_location             types.String `tfsdk:"default_location"`
-	default_resource_name_format types.String `tfsdk:"default_resource_name_format"`
-	default_nodash_name_format   types.String `tfsdk:"default_nodash_name_format"`
-	azure_resource_formats       types.Map    `tfsdk:"azure_resource_formats"`
-	custom_resource_formats      types.Map    `tfsdk:"custom_resource_formats"`
-	extra_tokens                 types.Map    `tfsdk:"extra_tokens"`
+	SliceString                 types.String `tfsdk:"slice_string"`
+	DefaultLocation             types.String `tfsdk:"default_location"`
+	DefaultResourceNameFormat types.String `tfsdk:"default_resource_name_format"`
+	DefaultNodashNameFormat   types.String `tfsdk:"default_nodash_name_format"`
+	AzureResourceFormats       types.Map    `tfsdk:"azure_resource_formats"`
+	CustomResourceFormats      types.Map    `tfsdk:"custom_resource_formats"`
+	ExtraTokens                 types.Map    `tfsdk:"extra_tokens"`
 }
 
 func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -118,19 +118,19 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	var npConfig shared.NamepConfig
 
-	npConfig.DefaultLocation = config.default_location.ValueString()
-	npConfig.DefaultResourceNameFormat = config.default_resource_name_format.ValueString()
-	npConfig.DefaultNodashNameFormat = config.default_nodash_name_format.ValueString()
+	npConfig.DefaultLocation = config.DefaultLocation.ValueString()
+	npConfig.DefaultResourceNameFormat = config.DefaultResourceNameFormat.ValueString()
+	npConfig.DefaultNodashNameFormat = config.DefaultNodashNameFormat.ValueString()
 
-	utils.CheckUnknown(sliceStringProp, config.slice_string, &resp.Diagnostics, path.Root(sliceStringProp))
+	utils.CheckUnknown(sliceStringProp, config.SliceString, &resp.Diagnostics, path.Root(sliceStringProp))
 
-	npConfig.SliceTokens = strings.Fields(config.slice_string.ValueString())
+	npConfig.SliceTokens = strings.Fields(config.SliceString.ValueString())
 
-	utils.CheckUnknown(extraTokensProp, config.extra_tokens, &resp.Diagnostics, path.Root(extraTokensProp))
+	utils.CheckUnknown(extraTokensProp, config.ExtraTokens, &resp.Diagnostics, path.Root(extraTokensProp))
 
-	extra_variables := make(map[string]string, len(config.extra_tokens.Elements()))
+	extra_variables := make(map[string]string, len(config.ExtraTokens.Elements()))
 
-	for key, value := range config.extra_tokens.Elements() {
+	for key, value := range config.ExtraTokens.Elements() {
 		utils.CheckUnknown(fmt.Sprintf("%s.%s)", extraTokensProp, key), value, &resp.Diagnostics, path.Root(extraTokensProp).AtMapKey(key))
 
 		extra_variables[strings.ToUpper(key)] = value.String()
@@ -138,13 +138,13 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	npConfig.ExtraVariables = extra_variables
 
-	azure_resource_formats := make(map[string]string, len(config.azure_resource_formats.Elements()))
-	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &azure_resource_formats, false)...)
+	azure_resource_formats := make(map[string]string, len(config.AzureResourceFormats.Elements()))
+	resp.Diagnostics.Append(config.AzureResourceFormats.ElementsAs(ctx, &azure_resource_formats, false)...)
 
 	npConfig.AzureResourceFormats = azure_resource_formats
 
-	custom_resource_formats := make(map[string]string, len(config.custom_resource_formats.Elements()))
-	resp.Diagnostics.Append(config.azure_resource_formats.ElementsAs(ctx, &custom_resource_formats, false)...)
+	custom_resource_formats := make(map[string]string, len(config.CustomResourceFormats.Elements()))
+	resp.Diagnostics.Append(config.CustomResourceFormats.ElementsAs(ctx, &custom_resource_formats, false)...)
 
 	npConfig.CustomResourceFormats = custom_resource_formats
 

@@ -3,12 +3,11 @@ package datasource
 import (
 	"context"
 	"fmt"
+	"terraform-provider-namep/internal/cloud/azure"
 
 	"github.com/agext/levenshtein"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"golang.org/x/exp/maps"
-
-	"registry.terraform.io/jason-johnson/namep/internal/cloud/azure"
 )
 
 type stringInResourceMapValidator struct{}

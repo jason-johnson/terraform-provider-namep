@@ -8,15 +8,15 @@ import (
 	"strconv"
 	"strings"
 
+	"terraform-provider-namep/internal/cloud/azure"
+	"terraform-provider-namep/internal/shared"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"registry.terraform.io/jason-johnson/namep/internal/cloud/azure"
-	"registry.terraform.io/jason-johnson/namep/internal/provider"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -32,7 +32,7 @@ func New() datasource.DataSource {
 
 // data source implementation.
 type azureNameDataSource struct {
-	config *provider.NamepConfig
+	config *shared.NamepConfig
 }
 
 type azureNameDataSourceModel struct {
@@ -87,7 +87,7 @@ func (d *azureNameDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	config, ok := req.ProviderData.(*provider.NamepConfig)
+	config, ok := req.ProviderData.(*shared.NamepConfig)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -122,7 +122,7 @@ func (d *azureNameDataSource) Read(ctx context.Context, req datasource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func calculateName(name string, providerConfig provider.NamepConfig, config azureNameDataSourceModel, diags *diag.Diagnostics) string {
+func calculateName(name string, providerConfig shared.NamepConfig, config azureNameDataSourceModel, diags *diag.Diagnostics) string {
 	extra_variables := make(map[string]string)
 
 	maps.Copy(extra_variables, providerConfig.ExtraVariables)
@@ -281,7 +281,7 @@ func getTokenSliceIndex(token string) (int, bool) {
 	return result - 1, true
 }
 
-func getFormatString(config provider.NamepConfig, def azure.ResourceStructure) string {
+func getFormatString(config shared.NamepConfig, def azure.ResourceStructure) string {
 	format, exists := config.AzureResourceFormats[def.ResourceTypeName]
 
 	if !exists {

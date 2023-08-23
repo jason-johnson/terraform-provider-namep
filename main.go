@@ -4,10 +4,9 @@ import (
 	"context"
 	"flag"
 	"log"
+	"terraform-provider-namep/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-
-	"registry.terraform.io/jason-johnson/namep/internal/provider"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website

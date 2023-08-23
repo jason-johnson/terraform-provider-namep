@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	namep "terraform-provider-namep/internal/datasource"
+	"terraform-provider-namep/internal/shared"
+	"terraform-provider-namep/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"registry.terraform.io/jason-johnson/namep/internal/utils"
 )
 
 var (
@@ -55,17 +56,6 @@ type namepProviderModel struct {
 	azure_resource_formats       types.Map    `tfsdk:"azure_resource_formats"`
 	custom_resource_formats      types.Map    `tfsdk:"custom_resource_formats"`
 	extra_tokens                 types.Map    `tfsdk:"extra_tokens"`
-}
-
-type NamepConfig struct {
-	SliceTokens               []string
-	SliceTokensAvailable      int
-	ExtraVariables            map[string]string
-	DefaultLocation           string
-	DefaultResourceNameFormat string
-	DefaultNodashNameFormat   string
-	AzureResourceFormats      map[string]string
-	CustomResourceFormats     map[string]string
 }
 
 func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -126,7 +116,7 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	var npConfig NamepConfig
+	var npConfig shared.NamepConfig
 
 	npConfig.DefaultLocation = config.default_location.ValueString()
 	npConfig.DefaultResourceNameFormat = config.default_resource_name_format.ValueString()
@@ -163,7 +153,9 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 }
 
 func (p *namepProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		namep.New,
+	}
 }
 
 func (p *namepProvider) Resources(_ context.Context) []func() resource.Resource {

@@ -32,16 +32,16 @@ func New() datasource.DataSource {
 
 // data source implementation.
 type azureNameDataSource struct {
-	config *shared.NamepConfig
+	config shared.NamepConfig
 }
 
 type azureNameDataSourceModel struct {
 	ID           types.String `tfsdk:"id"`
-	name         types.String `tfsdk:"name"`
-	resourceType types.String `tfsdk:"type"`
-	location     types.String `tfsdk:"location"`
-	extraTokens  types.Map    `tfsdk:"extra_tokens"`
-	result       types.String `tfsdk:"result"`
+	Name         types.String `tfsdk:"name"`
+	ResourceType types.String `tfsdk:"type"`
+	Location     types.String `tfsdk:"location"`
+	ExtraTokens  types.Map    `tfsdk:"extra_tokens"`
+	Result       types.String `tfsdk:"result"`
 }
 
 func (d *azureNameDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -87,7 +87,7 @@ func (d *azureNameDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	config, ok := req.ProviderData.(*shared.NamepConfig)
+	config, ok := req.ProviderData.(shared.NamepConfig)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -109,10 +109,10 @@ func (d *azureNameDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	name := calculateName(config.name.ValueString(), *d.config, config, &resp.Diagnostics)
+	name := calculateName(config.Name.ValueString(), d.config, config, &resp.Diagnostics)
 
 	config.ID = types.StringValue(name)
-	config.result = types.StringValue(name)
+	config.Result = types.StringValue(name)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -127,25 +127,25 @@ func calculateName(name string, providerConfig shared.NamepConfig, config azureN
 
 	maps.Copy(extra_variables, providerConfig.ExtraVariables)
 
-	for name, value := range config.extraTokens.Elements() {
+	for name, value := range config.ExtraTokens.Elements() {
 		extra_variables[strings.ToUpper(name)] = value.String()
 	}
 
 	var location string
 
-	if config.location.IsNull() {
+	if config.Location.IsNull() {
 		location = providerConfig.DefaultLocation
 	} else {
-		location = config.location.ValueString()
+		location = config.Location.ValueString()
 	}
 
 	re := regexp.MustCompile(`#\{-?\w+-?}`)
 
 	var name_type string
-	if config.name.IsNull() || config.name.ValueString() == "" {
+	if config.Name.IsNull() || config.Name.ValueString() == "" {
 		name_type = "general"
 	} else {
-		name_type = config.resourceType.ValueString()
+		name_type = config.ResourceType.ValueString()
 	}
 
 	definition, exists := azure.ResourceDefinitions[name_type]

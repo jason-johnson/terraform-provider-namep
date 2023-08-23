@@ -1,16 +1,15 @@
 package datasource
 
 import (
+	"terraform-provider-namep/internal/acctest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
-	"registry.terraform.io/jason-johnson/namep/internal/provider"
 )
 
 func TestAccDataSourceAzureName_default_dashed(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_default_rg,
@@ -23,7 +22,7 @@ func TestAccDataSourceAzureName_default_dashed(t *testing.T) {
 
 func TestAccDataSourceAzureName_default_nodash(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_default_sa,
@@ -37,7 +36,7 @@ func TestAccDataSourceAzureName_default_nodash(t *testing.T) {
 
 func TestAccDataSourceAzureName_custom_rg_fmt(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_custom_rg_fmt,
@@ -52,7 +51,7 @@ func TestAccDataSourceAzureName_custom_rg_fmt(t *testing.T) {
 
 func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_custom_type_fmt,
@@ -67,7 +66,7 @@ func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
 
 func TestAccDataSourceAzureName_override_extra_token(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.GetTestAccProtoV6ProviderFactories(),
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAzureName_override_extra_token,

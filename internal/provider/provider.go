@@ -49,13 +49,13 @@ type namepProvider struct {
 }
 
 type namepProviderModel struct {
-	SliceString                 types.String `tfsdk:"slice_string"`
-	DefaultLocation             types.String `tfsdk:"default_location"`
+	SliceString               types.String `tfsdk:"slice_string"`
+	DefaultLocation           types.String `tfsdk:"default_location"`
 	DefaultResourceNameFormat types.String `tfsdk:"default_resource_name_format"`
 	DefaultNodashNameFormat   types.String `tfsdk:"default_nodash_name_format"`
-	AzureResourceFormats       types.Map    `tfsdk:"azure_resource_formats"`
-	CustomResourceFormats      types.Map    `tfsdk:"custom_resource_formats"`
-	ExtraTokens                 types.Map    `tfsdk:"extra_tokens"`
+	AzureResourceFormats      types.Map    `tfsdk:"azure_resource_formats"`
+	CustomResourceFormats     types.Map    `tfsdk:"custom_resource_formats"`
+	ExtraTokens               types.Map    `tfsdk:"extra_tokens"`
 }
 
 func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -119,8 +119,8 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	var npConfig shared.NamepConfig
 
 	npConfig.DefaultLocation = config.DefaultLocation.ValueString()
-	npConfig.DefaultResourceNameFormat = config.DefaultResourceNameFormat.ValueString()
-	npConfig.DefaultNodashNameFormat = config.DefaultNodashNameFormat.ValueString()
+	npConfig.DefaultResourceNameFormat = utils.ValueStringOrDefault(config.DefaultResourceNameFormat, "#{SLUG}-#{SHORT_LOC}-#{NAME}")
+	npConfig.DefaultNodashNameFormat = utils.ValueStringOrDefault(config.DefaultNodashNameFormat, "#{SLUG}#{SHORT_LOC}#{NAME}")
 
 	utils.CheckUnknown(sliceStringProp, config.SliceString, &resp.Diagnostics, path.Root(sliceStringProp))
 

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func CheckUnknown(name string, value attr.Value, diags *diag.Diagnostics, path path.Path) {
@@ -18,4 +19,12 @@ func CheckUnknown(name string, value attr.Value, diags *diag.Diagnostics, path p
 				name),
 		)
 	}
+}
+
+func ValueStringOrDefault(value basetypes.StringValue, defaultValue string) string {
+	if value.IsNull() {
+		return defaultValue
+	}
+
+	return value.ValueString()
 }

@@ -125,6 +125,7 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	utils.CheckUnknown(sliceStringProp, config.SliceString, &resp.Diagnostics, path.Root(sliceStringProp))
 
 	npConfig.SliceTokens = strings.Fields(config.SliceString.ValueString())
+	npConfig.SliceTokensAvailable = len(npConfig.SliceTokens)
 
 	utils.CheckUnknown(extraTokensProp, config.ExtraTokens, &resp.Diagnostics, path.Root(extraTokensProp))
 

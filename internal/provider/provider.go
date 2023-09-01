@@ -82,14 +82,12 @@ func (p *namepProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 				Optional:    true,
 			},
 			defaultResourceNameFormatProp: schema.StringAttribute{
-				Description: "Default format to use for resources which can have dashes.",
+				Description: "Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.",
 				Optional:    true,
-				//Default:     "#{SLUG}-#{SHORT_LOC}-#{NAME}",
 			},
 			defaultNodashNameFormatProp: schema.StringAttribute{
-				Description: "Default format to use for resources which can not have dashes.",
+				Description: "Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.",
 				Optional:    true,
-				//Default:     "#{SLUG}#{SHORT_LOC}#{NAME}",
 			},
 			azureResourceFormatsProp: schema.MapAttribute{
 				ElementType: types.StringType,

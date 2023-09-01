@@ -3,7 +3,6 @@ package datasource
 import (
 	"context"
 	"fmt"
-	"maps"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,12 +35,13 @@ type azureNameDataSource struct {
 }
 
 type azureNameDataSourceModel struct {
-	ID           types.String `tfsdk:"id"`
-	Name         types.String `tfsdk:"name"`
-	ResourceType types.String `tfsdk:"type"`
-	Location     types.String `tfsdk:"location"`
-	ExtraTokens  types.Map    `tfsdk:"extra_tokens"`
-	Result       types.String `tfsdk:"result"`
+	ID                        types.String `tfsdk:"id"`
+	Name                      types.String `tfsdk:"name"`
+	ResourceType              types.String `tfsdk:"type"`
+	Location                  types.String `tfsdk:"location"`
+	ExtraTokens               types.Map    `tfsdk:"extra_tokens"`
+	Result                    types.String `tfsdk:"result"`
+	extra_variables_overrides map[string]string
 }
 
 func (d *azureNameDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -106,6 +106,11 @@ func (d *azureNameDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var config azureNameDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+
+	extra_variables_overrides := make(map[string]string, len(config.ExtraTokens.Elements()))
+	resp.Diagnostics.Append(config.ExtraTokens.ElementsAs(ctx, &extra_variables_overrides, false)...)
+	config.extra_variables_overrides = extra_variables_overrides
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -126,10 +131,12 @@ func (d *azureNameDataSource) Read(ctx context.Context, req datasource.ReadReque
 func calculateName(name string, providerConfig shared.NamepConfig, config azureNameDataSourceModel, diags *diag.Diagnostics) string {
 	extra_variables := make(map[string]string)
 
-	maps.Copy(extra_variables, providerConfig.ExtraVariables)
+	for name, value := range providerConfig.ExtraVariables {
+		extra_variables[strings.ToUpper(name)] = value
+	}
 
-	for name, value := range config.ExtraTokens.Elements() {
-		extra_variables[strings.ToUpper(name)] = value.String()
+	for name, value := range config.extra_variables_overrides {
+		extra_variables[strings.ToUpper(name)] = value
 	}
 
 	var location string

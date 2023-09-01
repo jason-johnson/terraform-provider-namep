@@ -126,15 +126,8 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	utils.CheckUnknown(extraTokensProp, config.ExtraTokens, &resp.Diagnostics, path.Root(extraTokensProp))
 
-	// doing this because I can't figure out how to get the correct string value iterating over Elements() and setting the key directly (value is of the wrong type and returns string with quotes)
-	extra_variables_initial := make(map[string]string, len(config.ExtraTokens.Elements()))
-	resp.Diagnostics.Append(config.ExtraTokens.ElementsAs(ctx, &extra_variables_initial, false)...)
-
 	extra_variables := make(map[string]string, len(config.ExtraTokens.Elements()))
-
-	for key, value := range extra_variables_initial {
-		extra_variables[strings.ToUpper(key)] = value
-	}
+	resp.Diagnostics.Append(config.ExtraTokens.ElementsAs(ctx, &extra_variables, false)...)
 
 	npConfig.ExtraVariables = extra_variables
 

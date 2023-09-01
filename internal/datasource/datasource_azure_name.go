@@ -168,7 +168,7 @@ func calculateName(name string, providerConfig shared.NamepConfig, config azureN
 	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {
 		tl := len(token)
 		if tl < 1 {
-			diags.AddError("parse", fmt.Sprintf("bizarre token received %q", token))
+			diags.AddError("format (bizarre variable)", fmt.Sprintf("bizarre variable received %q", token))
 			return token
 		}
 
@@ -181,7 +181,7 @@ func calculateName(name string, providerConfig shared.NamepConfig, config azureN
 			tokenResult = location // TODO: location could be "", check that
 		case "SHORT_LOC":
 			if !locsOk {
-				diags.AddError("parse", fmt.Sprintf("SHORT_LOC used but no short map for location %q", location))
+				diags.AddError("format (SHORT_LOC)", fmt.Sprintf("SHORT_LOC used but no short map for location %q", location))
 				tokenProcessed = false
 				tokenResult = location
 			} else {
@@ -189,7 +189,7 @@ func calculateName(name string, providerConfig shared.NamepConfig, config azureN
 			}
 		case "ALT_SHORT_LOC":
 			if !locsOk {
-				diags.AddError("parse", fmt.Sprintf("ALT_SHORT_LOC used but no short map for location %q", location))
+				diags.AddError("format (ALT_SHORT_LOC)", fmt.Sprintf("ALT_SHORT_LOC used but no short map for location %q", location))
 				tokenProcessed = false
 				tokenResult = location
 			} else {
@@ -201,10 +201,10 @@ func calculateName(name string, providerConfig shared.NamepConfig, config azureN
 		case "SLUG":
 			if definition.CafPrefix == "" {
 				if name_type == "general" {
-					diags.AddError("parse", fmt.Sprintf("resource type must be defined to use SLUG (format: %s)", format))
+					diags.AddError("format (SLUG: resource_type missing)", fmt.Sprintf("resource type must be defined to use SLUG (format: %s)", format))
 					tokenProcessed = false
 				} else {
-					diags.AddError("parse", fmt.Sprintf("no slug defined for resource type '%s'", name_type))
+					diags.AddError("format (SLUG: no slug defined)", fmt.Sprintf("no slug defined for resource type '%s'", name_type))
 					tokenProcessed = false
 				}
 			}
@@ -217,14 +217,14 @@ func calculateName(name string, providerConfig shared.NamepConfig, config azureN
 
 				if hasIndex {
 					if idx >= providerConfig.SliceTokensAvailable {
-						diags.AddError("parse", fmt.Sprintf("invalid slice index used ('%s') in format", token))
+						diags.AddError("format (TOKEN_ invalid index)", fmt.Sprintf("invalid slice index used ('%s') in format", token))
 						tokenProcessed = false
 						tokenResult = fmt.Sprintf("${%s}", token)
 					} else {
 						tokenResult = strings.ToLower(providerConfig.SliceTokens[idx])
 					}
 				} else {
-					diags.AddError("parse", fmt.Sprintf("unknown token '%s' in format", token))
+					diags.AddError("format (unknown variable)", fmt.Sprintf("unknown variable '%s' in format", token))
 					tokenProcessed = false
 					tokenResult = fmt.Sprintf("${%s}", token)
 				}

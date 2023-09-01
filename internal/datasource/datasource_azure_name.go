@@ -51,6 +51,7 @@ func (d *azureNameDataSource) Metadata(_ context.Context, req datasource.Metadat
 // Schema defines the schema for the data source.
 func (d *azureNameDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "`namep_azure_name` defines a name for an azure resource.\nThe format will be used based on the the resource type selected and the appropriate format string.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

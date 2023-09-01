@@ -10,7 +10,6 @@ description: |-
 # namep_azure_name (Data Source)
 
 `namep_azure_name` defines a name for an azure resource.
-
 The format will be used based on the the resource type selected and the appropriate format string.
 
 ## Example Usage

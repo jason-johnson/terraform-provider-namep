@@ -10,22 +10,22 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-type stringInResourceMapValidator struct{}
+type stringInAzureResourceMapValidator struct{}
 
-func stringInResourceMap() stringInResourceMapValidator {
-	return stringInResourceMapValidator{}
+func stringInAzureResourceMap() stringInAzureResourceMapValidator {
+	return stringInAzureResourceMapValidator{}
 }
 
-func (v stringInResourceMapValidator) Description(ctx context.Context) string {
+func (v stringInAzureResourceMapValidator) Description(ctx context.Context) string {
 	return "string must must be present in the defined Azure Resource definitions"
 }
 
 // MarkdownDescription returns a markdown formatted description of the validator's behavior, suitable for a practitioner to understand its impact.
-func (v stringInResourceMapValidator) MarkdownDescription(ctx context.Context) string {
+func (v stringInAzureResourceMapValidator) MarkdownDescription(ctx context.Context) string {
 	return "string must must be present in the defined Azure Resource definitions"
 }
 
-func (v stringInResourceMapValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+func (v stringInAzureResourceMapValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
 	// If the value is unknown or null, there is nothing to validate.
 	if req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull() {
 		return

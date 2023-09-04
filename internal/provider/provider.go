@@ -147,7 +147,8 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 func (p *namepProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		namep.New,
+		namep.NewAzure,
+		namep.NewCustom,
 	}
 }
 

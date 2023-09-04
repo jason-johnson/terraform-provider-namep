@@ -57,7 +57,7 @@ func TestAccDataSourceAzureName_custom_type_fmt(t *testing.T) {
 				Config: testAccDataSourceAzureName_custom_type_fmt,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "myapp-dev-weu-uxx1-mygroup"),
-					resource.TestCheckResourceAttr("data.namep_azure_name.custom", "result", "thing-dev-weu-uxx1-mycustom"),
+					resource.TestCheckResourceAttr("data.namep_custom_name.custom", "result", "thing-dev-weu-uxx1-mycustom"),
 				),
 			},
 		},
@@ -132,7 +132,7 @@ provider "namep" {
   }
   default_resource_name_format = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   default_nodash_name_format = "#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{BRANCH}#{NAME}"
-  azure_resource_formats = {
+  custom_resource_formats = {
     my_type = "thing-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   }
 }
@@ -143,7 +143,7 @@ data "namep_azure_name" "rg" {
   type = "azurerm_resource_group"
 }
 
-data "namep_azure_name" "custom" {
+data "namep_custom_name" "custom" {
   name = "mycustom"
   location = "westeurope"
   type = "my_type"

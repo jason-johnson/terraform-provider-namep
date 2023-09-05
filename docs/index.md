@@ -51,11 +51,11 @@ The point of this attribute is so users who have a terraform string from some ot
 ## Creating the format string
 
 The formats are made with a string consisting of static text and variables to be substituted when the name is computed.  The
-formats can be specified in `default_nodash_name_format`, `default_resource_name_format`, and `azure_resource_formats`.  Any normal
-text found in the string will be left as-is.  Any text start surrounded by `#{}` will be treated as a variable and substituted
-if possible.  Variables also support **optional dashes**. A variable like `#{-VAR}` will put a dash in front of the variable
-unless the value is empty.  The dash can also be after the variable name to optionally put it behind the variable instead.
-Using the dash on both sides is not supported.
+formats can be specified generically in `default_nodash_name_format` or `default_resource_name_format`, or specifically with
+`azure_resource_formats` or `custom_resource_formats`.  Any normal text found in the string will be left as-is.  Any text start surrounded by `#{}` will
+be treated as a variable and substituted if possible.  Variables also support **optional dashes**. A variable like `#{-VAR}`
+will put a dash in front of the variable unless the value is empty.  The dash can also be after the variable name to optionally
+put it behind the variable instead. Using the dash on both sides is not supported.
 
 **Note:  All variable values will be lowercased.**
 

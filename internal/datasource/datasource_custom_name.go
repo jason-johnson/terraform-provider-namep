@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"golang.org/x/exp/maps"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -97,8 +99,8 @@ func (d *customNameDataSource) Configure(_ context.Context, req datasource.Confi
 	}
 
 	d.config = config
-	d.resourceNameInfoMap = customResourceNameCollection{}
 	d.resourceFormats = d.config.CustomResourceFormats
+	d.resourceNameInfoMap = customResourceNameCollection{maps.Keys(d.resourceFormats)}
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -322,8 +324,10 @@ func (r customResourceStructure) slug() string {
 func (r customResourceStructure) validateResult(result string, diags *diag.Diagnostics) {
 }
 
-type customResourceNameCollection struct{}
+type customResourceNameCollection struct {
+	definedResources []string
+}
 
 func (c customResourceNameCollection) get(name string) (resourceNameInfo, bool) {
-	return &customResourceStructure{name}, true
+	return &customResourceStructure{name}, slices.Contains(c.definedResources, name)
 }

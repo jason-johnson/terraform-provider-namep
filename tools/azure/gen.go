@@ -1,5 +1,6 @@
 // The following directive is necessary to make the package coherent:
 
+//go:build ignore
 // +build ignore
 
 // This program generates models_generated.go. It can be invoked by running
@@ -10,7 +11,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -54,13 +54,13 @@ func main() {
 		log.Panicln("No directory found")
 	}
 	fmt.Println()
-	files, err := ioutil.ReadDir(path.Join(wd, "tools/templates"))
+	files, err := os.ReadDir(path.Join(wd, "tools/azure/templates"))
 	if err != nil {
 		log.Fatal(err)
 	}
 	var fileNames = make([]string, len(files))
 	for i, file := range files {
-		fileNames[i] = path.Join(wd, "tools/templates", file.Name())
+		fileNames[i] = path.Join(wd, "tools/azure/templates", file.Name())
 	}
 	parsedTemplate, err := template.New("templates").Funcs(template.FuncMap{
 		// Terraform not yet support lookahead in their regex function
@@ -73,7 +73,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sourceDefinitions, err := ioutil.ReadFile(path.Join(wd, "tools/data/resourceDefinition.json"))
+	sourceDefinitions, err := os.ReadFile(path.Join(wd, "tools/azure/data/resourceDefinition.json"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Undocumented resource definitions
-	sourceDefinitionsUndocumented, err := ioutil.ReadFile(path.Join(wd, "tools/data/resourceDefinition_out_of_docs.json"))
+	sourceDefinitionsUndocumented, err := os.ReadFile(path.Join(wd, "tools/azure/data/resourceDefinition_out_of_docs.json"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func main() {
 		}
 	}
 
-	modelsFile, err := os.OpenFile(path.Join(wd, "internal/provider/models_generated.go"), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	modelsFile, err := os.OpenFile(path.Join(wd, "internal/cloud/azure/models_generated.go"), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

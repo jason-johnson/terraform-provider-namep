@@ -4,7 +4,7 @@ provider "namep" {
   extra_tokens = {
     branch = var.branch_name
   }
-  resource_formats = {
+  azure_resource_formats = {
     azurerm_resource_group = "#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}#{-BRANCH}-#{NAME}"
   }
 }

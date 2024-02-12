@@ -166,6 +166,12 @@
     "short_name_1": "wus"
   },
   {
+    "azName": "japanwest",
+    "name": "Japan West",
+    "region": "Asia Pacific",
+    "short_name_1": "jpw"
+  },
+  {
     "azName": "jioindiawest",
     "name": "Jio India West",
     "region": "Asia Pacific",
@@ -206,12 +212,6 @@
     "name": "Australia Southeast",
     "region": "Asia Pacific",
     "short_name_1": "ase"
-  },
-  {
-    "azName": "japanwest",
-    "name": "Japan West",
-    "region": "Asia Pacific",
-    "short_name_1": "jpw"
   },
   {
     "azName": "jioindiacentral",

@@ -11,6 +11,10 @@ import (
 // Ensure the implementation satisfies the desired interfaces.
 var _ function.Function = &CustomNameFunction{}
 
+func NewCustomNameFunction() function.Function {
+	return &CustomNameFunction{}
+}
+
 type CustomNameFunction struct {
 	Name                      types.String `tfsdk:"name"`
 	ResourceType              types.String `tfsdk:"type"`

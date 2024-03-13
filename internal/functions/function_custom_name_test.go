@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
-func TestEchoFunction_Valid(t *testing.T) {
+func TestCustomNameFunction_Valid(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("1.0.0")()),
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -33,12 +33,12 @@ output "test" {
 
 // The example implementation does not return any errors, however
 // this acceptance test verifies how the function should behave if it did.
-func TestEchoFunction_Invalid(t *testing.T) {
+func TestCustomNameFunction_Invalid(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("1.0.0")()),
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -55,12 +55,12 @@ output "test" {
 
 // The example implementation does not enable AllowNullValue, however this
 // acceptance test shows how to verify the behavior.
-func TestEchoFunction_Null(t *testing.T) {
+func TestCustomNameFunction_Null(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("1.0.0")()),
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -77,20 +77,20 @@ output "test" {
 
 // The example implementation does not enable AllowUnknownValues, however this
 // acceptance test shows how to verify the behavior.
-func TestEchoFunction_Unknown(t *testing.T) {
+func TestCustomNameFunction_Unknown(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("1.0.0")()),
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
-terraform_data "test" {
+resource "terraform_data" "test" {
     input = "test-value"
 }
 
 output "test" {
-    value = provider::namep::custom_name(terraform_data.test.output)
+    value = provider::namep::custom_name(resource.terraform_data.test.output)
 }
 `,
 				Check: resource.TestCheckOutput("test", "test-value"),

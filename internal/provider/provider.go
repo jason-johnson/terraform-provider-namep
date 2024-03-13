@@ -4,10 +4,12 @@ import (
 	"context"
 	"strings"
 	namep "terraform-provider-namep/internal/datasource"
+	namepf "terraform-provider-namep/internal/functions"
 	"terraform-provider-namep/internal/shared"
 	"terraform-provider-namep/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -138,4 +140,10 @@ func (p *namepProvider) DataSources(_ context.Context) []func() datasource.DataS
 
 func (p *namepProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{}
+}
+
+func (p *namepProvider) Functions(_ context.Context) []func() function.Function {
+	return []func() function.Function{
+		namepf.NewCustomNameFunction,
+	}
 }

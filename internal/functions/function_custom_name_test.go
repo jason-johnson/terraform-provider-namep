@@ -22,7 +22,7 @@ func TestCustomNameFunction_Valid(t *testing.T) {
 			{
 				Config: `
 output "test" {
-    value = provider::namep::custom_name("test-value")
+    value = provider::namep::custom_name("test-value", "azurerm_resource_group", { location = "westeurope", extra_tokens = { "app" = "myapp" } })
 }
 `,
 				Check: resource.TestCheckOutput("test", "test-value"),

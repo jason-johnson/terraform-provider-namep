@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
-func TestCustomNameFunction_Valid(t *testing.T) {
+func TestCustomNameFunction_Map(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
@@ -23,6 +23,26 @@ func TestCustomNameFunction_Valid(t *testing.T) {
 				Config: `
 output "test" {
     value = provider::namep::custom_name({ name = "test-value", type = "azurerm_resource_group", location = "westeurope", extra_tokens = { "app" = "myapp" } })
+}
+`,
+				Check: resource.TestCheckOutput("test", "test-value"),
+			},
+		},
+	})
+}
+
+func TestCustomNameFunction_TypeOnly(t *testing.T) {
+	t.Parallel()
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+output "test" {
+    value = provider::namep::custom_name("azurerm_resource_group")
 }
 `,
 				Check: resource.TestCheckOutput("test", "test-value"),

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -34,21 +33,9 @@ func (f *CustomNameFunction) Definition(ctx context.Context, req function.Defini
 		Description: "This function creates a name for an azure resource.\nThe format will be used based on the the resource type selected and the appropriate format string.",
 
 		Parameters: []function.Parameter{
-			function.StringParameter{
-				Name:        nameProp,
-				Description: "String to put in the #{NAME} part of the format.",
-			},
-			function.StringParameter{
-				Name:        typeProp,
-				Description: "The type of the resource to create the name for.",
-			},
-			function.ObjectParameter{
-				Name:        "args",
-				Description: "Extra variables for use in format (see Supported Variables) for this data source (may override provider extra_tokens).",
-				AttributeTypes: map[string]attr.Type{
-					locationProp:    types.StringType,
-					extraTokensProp: types.MapType{ElemType: types.StringType},
-				},
+			function.DynamicParameter{
+				Name:        "params",
+				Description: "Function parameters.  Valid keys are 'name', 'type', 'location', and 'extra_tokens'.",
 			},
 		},
 
@@ -57,16 +44,48 @@ func (f *CustomNameFunction) Definition(ctx context.Context, req function.Defini
 }
 
 func (f *CustomNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
-	var name string
+	var dynamicArg types.Dynamic
 	var resourceType string
-	var args struct {
-		Location    types.String `tfsdk:"location"`
-		ExtraTokens types.Map    `tfsdk:"extra_tokens"`
+	var name string
+	var location string
+	extraTokens := map[string]string{}
+	resourceTypeSeen := false
+
+	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &dynamicArg))
+
+	switch t := dynamicArg.UnderlyingValue().(type) {
+	case types.Object:
+		obj := dynamicArg.UnderlyingValue().(types.Object)
+		for key, attr := range obj.Attributes() {
+			switch key {
+			case "name":
+				name = attr.String()
+			case "type":
+				resourceType = attr.String()
+				resourceTypeSeen = true
+			case "location":
+				location = attr.String()
+			case "extra_tokens":
+				switch ett := attr.(type) {
+				case types.Object:
+					attrObj := attr.(types.Object)
+					for key, attr := range attrObj.Attributes() {
+						extraTokens[key] = attr.String()
+					}
+				default:
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("extra_tokens expected to be a map, got %T", ett)))
+				}
+			}
+		}
+	default:
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("object expected, got %T", t)))
 	}
 
-	// Read Terraform argument data into the variable
-	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &name, &resourceType, &args))
+	if !resourceTypeSeen {
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("type is required"))
+		return
+	}
 
 	// Set the result to the same data
-	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("name: %s, type: %s, location: %s, extra_tokens: %v", name, resourceType, args.Location, args.ExtraTokens)))
+	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("name: %s, type: %s, location: %s, extra_tokens: %v", name, resourceType, location, extraTokens)))
 }

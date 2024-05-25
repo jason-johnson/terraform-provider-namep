@@ -15,13 +15,7 @@ func NewCustomNameFunction() function.Function {
 	return &CustomNameFunction{}
 }
 
-type CustomNameFunction struct {
-	Name                      types.String `tfsdk:"name"`
-	ResourceType              types.String `tfsdk:"type"`
-	Location                  types.String `tfsdk:"location"`
-	ExtraTokens               types.Map    `tfsdk:"extra_tokens"`
-	extra_variables_overrides map[string]string
-}
+type CustomNameFunction struct{}
 
 func (f *CustomNameFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
 	resp.Name = "custom_name"
@@ -54,6 +48,9 @@ func (f *CustomNameFunction) Run(ctx context.Context, req function.RunRequest, r
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &dynamicArg))
 
 	switch t := dynamicArg.UnderlyingValue().(type) {
+	case types.String:
+		resourceType = t.String()
+		resourceTypeSeen = true
 	case types.Object:
 		obj := dynamicArg.UnderlyingValue().(types.Object)
 		for key, attr := range obj.Attributes() {
@@ -86,6 +83,5 @@ func (f *CustomNameFunction) Run(ctx context.Context, req function.RunRequest, r
 		return
 	}
 
-	// Set the result to the same data
 	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("name: %s, type: %s, location: %s, extra_tokens: %v", name, resourceType, location, extraTokens)))
 }

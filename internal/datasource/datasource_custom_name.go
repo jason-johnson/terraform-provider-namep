@@ -321,6 +321,10 @@ func (r customResourceStructure) slug() string {
 	return ""
 }
 
+func (r customResourceStructure) scope() string {
+	return ""
+}
+
 func (r customResourceStructure) validateResult(result string, diags *diag.Diagnostics) {
 }
 

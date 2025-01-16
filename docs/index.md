@@ -40,6 +40,8 @@ The purpose of this attribute is to allow overrides to the format only for speci
 - `custom_resource_formats` (Map of String) Which format to use for specific custom resource types (see Example Usage).
 
 The purpose of this attribute is to allow creation of special custom formats for things that may not be recources.
+- `default_global_nodash_name_format` (String) Default format to use for resources which can not have dashes and are in global scope. Defaults to `default_nodash_name_format`.
+- `default_global_resource_name_format` (String) Default format to use for resources which can have dashes in global scope. Defaults to `default_resource_name_format`.
 - `default_location` (String) Location to use if none are specified in the data_source.
 - `default_nodash_name_format` (String) Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.
 - `default_resource_name_format` (String) Default format to use for resources which can have dashes. Defaults to `#{SLUG}-#{SHORT_LOC}-#{NAME}`.
@@ -76,8 +78,8 @@ put it behind the variable instead. Using the dash on both sides is not supporte
 `NAME` - The value of the `name` attribute.
 
 `SLUG` - A slug representing the resource the format is being created for.  This variable can only be used if the resource type is specified.
-         See [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/data/resourceDefinition.json) and
-         [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/data/resourceDefinition_out_of_docs.json) for the Azure slug mapping.
+         See [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/azure/data/resourceDefinition.json) and
+         [here](https://github.com/jason-johnson/terraform-provider-namep/blob/main/tools/azure/data/resourceDefinition_out_of_docs.json) for the Azure slug mapping.
 
 **NOTE**: The Azure mappings are actually loaded from the [azurecaf](https://github.com/aztfmod/terraform-provider-azurecaf) project.
 

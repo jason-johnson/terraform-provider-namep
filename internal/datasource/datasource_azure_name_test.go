@@ -80,6 +80,23 @@ func TestAccDataSourceAzureName_override_extra_token(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAzureName_global_name(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAzureName_global_name,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "rg-myapp-dev-weu-mygroup"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "stmyappdevweusa1gbl"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "stmyappdevweusa2gbl"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.kv", "result", "kv-myapp-dev-weu-kv-gbl"),
+				),
+			},
+		},
+	})
+}
+
 // test configurations
 
 const testAccDataSourceAzureName_default_rg = `
@@ -181,4 +198,39 @@ data "namep_azure_name" "sab" {
 		myslug = "stacc"
 	  }
   }
+`
+
+const testAccDataSourceAzureName_global_name = `
+provider "namep" {
+  slice_string     = "MYAPP DEV"
+  default_location = "westeurope"
+  default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
+  default_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
+  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}-gbl"
+  default_global_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}gbl"
+}
+
+data "namep_azure_name" "rg" {
+  name = "mygroup"
+  location = "westeurope"
+  type = "azurerm_resource_group"
+}
+
+data "namep_azure_name" "saa" {
+  name = "sa1"
+  location = "westeurope"
+  type = "azurerm_storage_account"
+}
+
+data "namep_azure_name" "sab" {
+	name = "sa2"
+	location = "westeurope"
+	type = "azurerm_storage_account"
+}
+
+data "namep_azure_name" "kv" {
+	name = "kv"
+	location = "westeurope"
+	type = "azurerm_key_vault"
+}
 `

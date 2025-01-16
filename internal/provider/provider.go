@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	namep "terraform-provider-namep/internal/datasource"
 	"terraform-provider-namep/internal/shared"
@@ -32,13 +33,15 @@ type namepProvider struct {
 }
 
 type namepProviderModel struct {
-	SliceString               types.String `tfsdk:"slice_string"`
-	DefaultLocation           types.String `tfsdk:"default_location"`
-	DefaultResourceNameFormat types.String `tfsdk:"default_resource_name_format"`
-	DefaultNodashNameFormat   types.String `tfsdk:"default_nodash_name_format"`
-	AzureResourceFormats      types.Map    `tfsdk:"azure_resource_formats"`
-	CustomResourceFormats     types.Map    `tfsdk:"custom_resource_formats"`
-	ExtraTokens               types.Map    `tfsdk:"extra_tokens"`
+	SliceString                     types.String `tfsdk:"slice_string"`
+	DefaultLocation                 types.String `tfsdk:"default_location"`
+	DefaultResourceNameFormat       types.String `tfsdk:"default_resource_name_format"`
+	DefaultNodashNameFormat         types.String `tfsdk:"default_nodash_name_format"`
+	DefaultGlobalResourceNameFormat types.String `tfsdk:"default_global_resource_name_format"`
+	DefaultGlobalNodashNameFormat   types.String `tfsdk:"default_global_nodash_name_format"`
+	AzureResourceFormats            types.Map    `tfsdk:"azure_resource_formats"`
+	CustomResourceFormats           types.Map    `tfsdk:"custom_resource_formats"`
+	ExtraTokens                     types.Map    `tfsdk:"extra_tokens"`
 }
 
 func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -73,6 +76,14 @@ func (p *namepProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 				Description: "Default format to use for resources which can not have dashes. Defaults to `#{SLUG}#{SHORT_LOC}#{NAME}`.",
 				Optional:    true,
 			},
+			defaultGlobalResourceNameFormatProp: schema.StringAttribute{
+				Description: fmt.Sprintf("Default format to use for resources which can have dashes in global scope. Defaults to `%s`.", defaultResourceNameFormatProp),
+				Optional:    true,
+			},
+			defaultGlobalNodashNameFormatProp: schema.StringAttribute{
+				Description: fmt.Sprintf("Default format to use for resources which can not have dashes and are in global scope. Defaults to `%s`.", defaultNodashNameFormatProp),
+				Optional:    true,
+			},
 			azureResourceFormatsProp: schema.MapAttribute{
 				ElementType: types.StringType,
 				Description: "Which format to use for specific azure resource types (see Example Usage).\n\nThe purpose of this attribute " +
@@ -102,6 +113,8 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	npConfig.DefaultLocation = config.DefaultLocation.ValueString()
 	npConfig.DefaultResourceNameFormat = utils.ValueStringOrDefault(config.DefaultResourceNameFormat, "#{SLUG}-#{SHORT_LOC}-#{NAME}")
 	npConfig.DefaultNodashNameFormat = utils.ValueStringOrDefault(config.DefaultNodashNameFormat, "#{SLUG}#{SHORT_LOC}#{NAME}")
+	npConfig.DefaultGlobalResourceNameFormat = utils.ValueStringOrDefault(config.DefaultGlobalResourceNameFormat, npConfig.DefaultResourceNameFormat)
+	npConfig.DefaultGlobalNodashNameFormat = utils.ValueStringOrDefault(config.DefaultGlobalNodashNameFormat, npConfig.DefaultNodashNameFormat)
 
 	utils.CheckUnknown(sliceStringProp, config.SliceString, &resp.Diagnostics, path.Root(sliceStringProp))
 

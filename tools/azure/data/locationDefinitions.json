@@ -6,12 +6,6 @@
     "short_name_1": "eus"
   },
   {
-    "azName": "eastus2",
-    "name": "East US 2",
-    "region": "US",
-    "short_name_1": "eus2"
-  },
-  {
     "azName": "southcentralus",
     "name": "South Central US",
     "region": "US",
@@ -148,10 +142,10 @@
     "short_name_1": "brs"
   },
   {
-    "azName": "centraluseuap",
-    "name": "Central US EUAP",
+    "azName": "eastus2",
+    "name": "East US 2",
     "region": "US",
-    "short_name_1": "ccy"
+    "short_name_1": "eus2"
   },
   {
     "azName": "northcentralus",
@@ -176,6 +170,12 @@
     "name": "Jio India West",
     "region": "Asia Pacific",
     "short_name_1": "jiw"
+  },
+  {
+    "azName": "centraluseuap",
+    "name": "Central US EUAP",
+    "region": "US",
+    "short_name_1": "ccy"
   },
   {
     "azName": "eastus2euap",

@@ -10,5 +10,6 @@ type resourceNameInfo interface {
 	name() string
 	allowsDashes() bool
 	slug() string
+	scope() string
 	validateResult(result string, diags *diag.Diagnostics)
 }

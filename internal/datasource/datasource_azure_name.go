@@ -76,6 +76,10 @@ func (r resourceStructure) slug() string {
 	return r.CafPrefix
 }
 
+func (r resourceStructure) scope() string {
+	return r.Scope
+}
+
 func (r resourceStructure) validateResult(result string, diags *diag.Diagnostics) {
 	errorSeen := false
 

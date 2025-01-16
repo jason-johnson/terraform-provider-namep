@@ -90,6 +90,7 @@ func TestAccDataSourceAzureName_global_name(t *testing.T) {
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "rg-myapp-dev-weu-mygroup"),
 					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "stmyappdevweusa1gbl"),
 					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "stmyappdevweusa2gbl"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.kv", "result", "kv-myapp-dev-weu-kv-gbl"),
 				),
 			},
 		},
@@ -205,7 +206,7 @@ provider "namep" {
   default_location = "westeurope"
   default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
   default_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
-  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}gbl"
+  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}-gbl"
   default_global_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}gbl"
 }
 
@@ -225,5 +226,11 @@ data "namep_azure_name" "sab" {
 	name = "sa2"
 	location = "westeurope"
 	type = "azurerm_storage_account"
+}
+
+data "namep_azure_name" "kv" {
+	name = "kv"
+	location = "westeurope"
+	type = "azurerm_key_vault"
 }
 `

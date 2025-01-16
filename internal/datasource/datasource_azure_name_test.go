@@ -88,8 +88,8 @@ func TestAccDataSourceAzureName_global_name(t *testing.T) {
 				Config: testAccDataSourceAzureName_global_name,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "rg-myapp-dev-weu-mygroup"),
-					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "unsetmyappdevweusa1gbl"),
-					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "staccmyappdevweusa2gbl"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "stmyappdevweusa1gbl"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "stmyappdevweusa2gbl"),
 				),
 			},
 		},
@@ -203,13 +203,10 @@ const testAccDataSourceAzureName_global_name = `
 provider "namep" {
   slice_string     = "MYAPP DEV"
   default_location = "westeurope"
-  extra_tokens = {
-    myslug = "unset"
-  }
-	default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
-	default_nodash_name_format = "#{MYSLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
-	default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}gbl"
-	default_global_nodash_name_format = "#{MYSLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}gbl"
+  default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
+  default_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
+  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}gbl"
+  default_global_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}gbl"
 }
 
 data "namep_azure_name" "rg" {
@@ -228,8 +225,5 @@ data "namep_azure_name" "sab" {
 	name = "sa2"
 	location = "westeurope"
 	type = "azurerm_storage_account"
-	extra_tokens = {
-		myslug = "stacc"
-	  }
-  }
+}
 `

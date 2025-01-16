@@ -206,8 +206,12 @@ provider "namep" {
   default_location = "westeurope"
   default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
   default_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
-  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}-gbl"
-  default_global_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}gbl"
+  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}-#{RND}"
+  default_global_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}#{RND}"
+
+  extra_tokens = {
+    rnd = "gbl"
+  }
 }
 
 data "namep_azure_name" "rg" {

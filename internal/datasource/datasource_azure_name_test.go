@@ -88,8 +88,8 @@ func TestAccDataSourceAzureName_global_name(t *testing.T) {
 				Config: testAccDataSourceAzureName_global_name,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.namep_azure_name.rg", "result", "rg-myapp-dev-weu-mygroup"),
-					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "unsetmyappdevweusa1global"),
-					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "staccmyappdevweusa2global"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.saa", "result", "unsetmyappdevweusa1gbl"),
+					resource.TestCheckResourceAttr("data.namep_azure_name.sab", "result", "staccmyappdevweusa2gbl"),
 				),
 			},
 		},
@@ -208,8 +208,8 @@ provider "namep" {
   }
 	default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
 	default_nodash_name_format = "#{MYSLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
-	default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}global"
-	default_global_nodash_name_format = "#{MYSLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}global"
+	default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}gbl"
+	default_global_nodash_name_format = "#{MYSLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}gbl"
 }
 
 data "namep_azure_name" "rg" {

@@ -113,6 +113,8 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	npConfig.DefaultLocation = config.DefaultLocation.ValueString()
 	npConfig.DefaultResourceNameFormat = utils.ValueStringOrDefault(config.DefaultResourceNameFormat, "#{SLUG}-#{SHORT_LOC}-#{NAME}")
 	npConfig.DefaultNodashNameFormat = utils.ValueStringOrDefault(config.DefaultNodashNameFormat, "#{SLUG}#{SHORT_LOC}#{NAME}")
+	npConfig.DefaultGlobalResourceNameFormat = utils.ValueStringOrDefault(config.DefaultGlobalResourceNameFormat, npConfig.DefaultResourceNameFormat)
+	npConfig.DefaultGlobalNodashNameFormat = utils.ValueStringOrDefault(config.DefaultGlobalNodashNameFormat, npConfig.DefaultNodashNameFormat)
 
 	utils.CheckUnknown(sliceStringProp, config.SliceString, &resp.Diagnostics, path.Root(sliceStringProp))
 

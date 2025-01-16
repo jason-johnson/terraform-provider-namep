@@ -294,9 +294,17 @@ func getFormatString(d *customNameDataSource, def resourceNameInfo) string {
 
 	if !exists {
 		if def.allowsDashes() {
-			format = d.config.DefaultResourceNameFormat
+			if def.scope() == "global" {
+				format = d.config.DefaultGlobalResourceNameFormat
+			} else {
+				format = d.config.DefaultResourceNameFormat
+			}
 		} else {
-			format = d.config.DefaultNodashNameFormat
+			if def.scope() == "global" {
+				format = d.config.DefaultGlobalNodashNameFormat
+			} else {
+				format = d.config.DefaultNodashNameFormat
+			}
 		}
 	}
 

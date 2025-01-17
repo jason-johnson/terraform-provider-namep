@@ -61,7 +61,7 @@ func (p *namepProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 			},
 			extraTokensProp: schema.MapAttribute{
 				ElementType: types.StringType,
-				Description: "Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.",
+				Description: "Extra variables for use in format (see Supported Variables).  These can be overriden at the data source level.  NOTE: These cannot be unknown (dynamic) values.  If you want that, set them at the data source level.",
 				Optional:    true,
 			},
 			defaultLocationProp: schema.StringAttribute{

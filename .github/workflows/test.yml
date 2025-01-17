@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+    - uses: hashicorp/setup-terraform@v3
 
     - name: Set up Go
       uses: actions/setup-go@v5

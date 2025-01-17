@@ -110,6 +110,20 @@ func TestAccDataSourceAzureName_global_name_provider_dynamic(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAzureName_global_name_provider_dynamic_resource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAzureName_global_name_provider_dynamic_resource,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.namep_azure_name.kv", "result", "kv-myapp-dev-weu-kv-gbl"),
+				),
+			},
+		},
+	})
+}
+
 // test configurations
 
 const testAccDataSourceAzureName_default_rg = `
@@ -274,5 +288,34 @@ data "namep_azure_name" "kv" {
 	name = "kv"
 	location = "westeurope"
 	type = "azurerm_key_vault"
+}
+`
+
+const testAccDataSourceAzureName_global_name_provider_dynamic_resource = `
+resource "terraform_data" "test" {
+  input = "gbl"
+}
+
+provider "namep" {
+  slice_string     = "MYAPP DEV"
+  default_location = "westeurope"
+  default_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}"
+  default_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}"
+  default_global_resource_name_format = "#{SLUG}-#{TOKEN_1}-#{TOKEN_2}-#{SHORT_LOC}-#{NAME}-#{RND}"
+  default_global_nodash_name_format = "#{SLUG}#{TOKEN_1}#{TOKEN_2}#{SHORT_LOC}#{NAME}#{RND}"
+
+  extra_tokens = {
+    rnd = "NOT SET"
+  }
+}
+
+data "namep_azure_name" "kv" {
+	name = "kv"
+	location = "westeurope"
+	type = "azurerm_key_vault"
+
+	extra_tokens = {
+	  rnd = terraform_data.test.output
+	}
 }
 `

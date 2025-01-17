@@ -122,6 +122,11 @@ func (p *namepProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	npConfig.SliceTokensAvailable = len(npConfig.SliceTokens)
 
 	utils.CheckUnknown(extraTokensProp, config.ExtraTokens, &resp.Diagnostics, path.Root(extraTokensProp))
+	utils.CheckUnknowMapValues(ctx, extraTokensProp, config.ExtraTokens, &resp.Diagnostics, path.Root(extraTokensProp))
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	extra_variables := make(map[string]string, len(config.ExtraTokens.Elements()))
 	resp.Diagnostics.Append(config.ExtraTokens.ElementsAs(ctx, &extra_variables, false)...)

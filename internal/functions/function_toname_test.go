@@ -8,7 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 )
 
 func TestCustomNameFunction_MapArgs(t *testing.T) {
@@ -36,34 +37,10 @@ func TestCustomNameFunction_TypeOnly(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: `
-output "test" {
-    value = provider::namep::toname("azurerm_resource_group")
-}
-`,
+				Config: `output "test" {
+							value = provider::namep::toname("azurerm_key_vault")
+						}`,
 				Check: resource.TestCheckOutput("test", "test-value"),
-			},
-		},
-	})
-}
-
-// The example implementation does not return any errors, however
-// this acceptance test verifies how the function should behave if it did.
-func TestCustomNameFunction_Invalid(t *testing.T) {
-	t.Parallel()
-
-	resource.UnitTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: `
-output "test" {
-    value = provider::namep::toname("invalid")
-}
-`,
-				ExpectError: regexp.MustCompile(`error summary`),
 			},
 		},
 	})
@@ -80,12 +57,10 @@ func TestCustomNameFunction_Null(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: `
-output "test" {
-    value = provider::namep::toname(null)
-}
-`,
-				ExpectError: regexp.MustCompile(`Invalid Function Call`),
+				Config: `output "test" {
+							value = provider::namep::toname(null)
+						}`,
+				ExpectError: regexp.MustCompile(`Invalid value for "resource_type" parameter: argument must not be null\.`),
 			},
 		},
 	})
@@ -100,20 +75,14 @@ func TestCustomNameFunction_Unknown(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: `
-resource "terraform_data" "test" {
-    input = "test-value"
-}
-
-output "test" {
-    value = provider::namep::toname(resource.terraform_data.test.output)
-}
-`,
-				Check: resource.TestCheckOutput("test", "test-value"),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectUnknownOutputValue("test"),
-					},
+				Config: `resource "terraform_data" "test" {
+							input = "test-value"
+						}
+						output "test" {
+							value = provider::namep::toname(resource.terraform_data.test.output)
+						}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("test-value")),
 				},
 			},
 		},

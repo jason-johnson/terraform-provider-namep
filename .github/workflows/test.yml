@@ -54,10 +54,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # list whatever Terraform versions here you would like to support
+        # We can keep a list here but I think the test framework is the deciding factor and these versions dont affect much.  If they did, why were provider functions working on 0. versions?
         terraform:
-          - '1.8.5'
-          - '1.9.8'
           - '1.10.4'
     steps:
     - uses: hashicorp/setup-terraform@v3

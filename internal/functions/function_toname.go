@@ -20,14 +20,13 @@ func NewToNameFunction() function.Function {
 type ToNameFunction struct{}
 
 type typeFields struct {
-	Type               *string `tfsdk:"type"`
-	Slug               *string `tfsdk:"slug"`
-	Min_length         *int32  `tfsdk:"min_length"`
-	Max_length         *int32  `tfsdk:"max_length"`
-	Lowercase          *bool   `tfsdk:"lowercase"`
-	Validatation_regex *string `tfsdk:"validatation_regex"`
-	Dashes             *bool   `tfsdk:"dashes"`
-	Scope              *string `tfsdk:"scope"`
+	Name               string `tfsdk:"name"`
+	Slug               string `tfsdk:"slug"`
+	MinLength          int32  `tfsdk:"min_length"`
+	MaxLength          int32  `tfsdk:"max_length"`
+	Lowercase          bool   `tfsdk:"lowercase"`
+	Validatation_regex string `tfsdk:"validatation_regex"`
+	DefaultSelector    string `tfsdk:"default_selector"`
 }
 
 func (f *ToNameFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
@@ -54,14 +53,13 @@ func (f *ToNameFunction) Definition(ctx context.Context, req function.Definition
 					"types": types.MapType{
 						ElemType: types.ObjectType{
 							AttrTypes: map[string]attr.Type{
-								"type":               types.StringType,
+								"name":               types.StringType,
 								"slug":               types.StringType,
 								"min_length":         types.Int32Type,
 								"max_length":         types.Int32Type,
 								"lowercase":          types.BoolType,
 								"validatation_regex": types.StringType,
-								"dashes":             types.BoolType,
-								"scope":              types.StringType,
+								"default_selector":   types.StringType,
 							},
 						},
 					},
@@ -90,13 +88,26 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 	var overridesArg []map[string]string
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
-	typeMap := make(map[string]typeFields)
-	for k, o := range *configurationsArg.Types {
-		v := typeFields{}
-		diag := o.As(ctx, &v, basetypes.ObjectAsOptions{})
-		resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
 
-		typeMap[k] = v
+	typeInfo := typeFields{
+		DefaultSelector:    "custom",
+		Validatation_regex: ".*", // No possible validation for default custom names
+	}
+	for k, o := range *configurationsArg.Types {
+		if k == resourceType {
+			diag := o.As(ctx, &typeInfo, basetypes.ObjectAsOptions{})
+			resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
+		}
+	}
+	format, exists := (*configurationsArg.Formats)[resourceType]
+
+	if !exists {
+		format, exists = (*configurationsArg.Formats)[typeInfo.DefaultSelector]
+
+		if !exists {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type '%s' or default selector '%s'", resourceType, typeInfo.DefaultSelector)))
+			return
+		}
 	}
 
 	for _, overrideValue := range overridesArg {
@@ -110,5 +121,5 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 		}
 	}
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, configurationsArg: %v, overridesArg: %v, typeMap: %v", resourceType, configurationsArg, overridesArg, typeMap)))
+	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, configurationsArg: %v, overridesArg: %v, typeInfo: %v, format: %s", resourceType, configurationsArg, overridesArg, typeInfo, format)))
 }

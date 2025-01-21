@@ -160,6 +160,6 @@ func (p *namepProvider) Resources(_ context.Context) []func() resource.Resource 
 
 func (p *namepProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{
-		namepf.NewToNameFunction,
+		namepf.NewNameStringFunction,
 	}
 }

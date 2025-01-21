@@ -15,7 +15,7 @@ import (
 // Ensure the implementation satisfies the desired interfaces.
 var _ function.Function = &NameStringFunction{}
 
-func NewToNameFunction() function.Function {
+func NewNameStringFunction() function.Function {
 	return &NameStringFunction{}
 }
 

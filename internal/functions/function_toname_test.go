@@ -104,7 +104,7 @@ locals {
 	    salt = "uxx1"
 	    loc = "westeurope"
 	  }
-	  type_formats = {
+	  formats = {
 	    azurerm_resource_group = "#{APP}-#{ENV}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 	  }
 	}

@@ -32,10 +32,20 @@ func (f *ToNameFunction) Definition(ctx context.Context, req function.Definition
 				Name:        "resource_type",
 				Description: "Type of resource to create a name for (required for selecting format, certain variables and perform validation)",
 			},
+			function.ObjectParameter{
+				Name:        "configurations",
+				Description: "A configuration object that contains the variables and formats to use for the name.",
+				AttributeTypes: map[string]attr.Type{
+					"variables":     types.MapType{ElemType: types.StringType},
+					"formats":       types.MapType{ElemType: types.StringType},
+					"variable_maps": types.MapType{ElemType: types.MapType{ElemType: types.StringType}},
+				},
+			},
 		},
-		VariadicParameter: function.DynamicParameter{
-			Name:        "configurations",
-			Description: "The first of these arguments will be a configuration as described in `Configuration`.  Each additional argument is expected to be a map of strings which will override the `variables` portion of the configuration.",
+		VariadicParameter: function.MapParameter{
+			Name:        "overrides",
+			Description: "Variable overrides.  Each argument will be processed in order, overriding the `variables` map which was passed in the configuration parameter.",
+			ElementType: types.StringType,
 		},
 
 		Return: function.StringReturn{},
@@ -43,60 +53,21 @@ func (f *ToNameFunction) Definition(ctx context.Context, req function.Definition
 }
 
 func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
-	var configsArg []types.Dynamic
 	var resourceType string
-	var variables map[string]string
-	var formats map[string]string
+	var configurationsArg struct {
+		Variables     *map[string]string              `tfsdk:"variables"`
+		Formats       *map[string]string              `tfsdk:"formats"`
+		Variable_maps *map[string](map[string]string) `tfsdk:"variable_maps"`
+	}
+	var overridesArg []map[string]string
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configsArg))
+	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
 
-	for _, configValue := range configsArg {
-		if configValue.IsNull() {
-			continue
-		}
-		if configValue.IsUnknown() {
-			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("unknown configuration, should be impossible"))
-			continue
-		}
-
-		switch t := configValue.UnderlyingValue().(type) {
-		case types.Object:
-			obj := configValue.UnderlyingValue().(types.Object)
-			for key, attr := range obj.Attributes() {
-				switch key {
-				case "variables":
-					variables = to_map(attr, resp.Error)
-				case "formats":
-					formats = to_map(attr, resp.Error)
-				default:
-					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("unknown key %s", key)))
-				}
-			}
-		default:
-			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("object expected, got %T", t)))
+	for _, overrideValue := range overridesArg {
+		if overrideValue == nil {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("Got empty map for override"))
 		}
 	}
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, variables: %v, formats: %v", resourceType, variables, formats)))
-}
-
-
-func to_map(value attr.Value, diag *function.FuncError) map[string]string {
-	switch t := value.(type) {
-	case types.Object:
-		obj := value.(types.Object)
-		m := make(map[string]string)
-		for key, attr := range obj.Attributes() {
-			switch tt := attr.(type) {
-			case types.String:
-				m[key] = attr.String()
-			default:
-				diag = function.ConcatFuncErrors(diag, function.NewFuncError(fmt.Sprintf("expected string type for key %s, but got %T", key, tt)))
-			}
-		}
-		return m
-	default:
-		function.ConcatFuncErrors(diag, function.NewFuncError(fmt.Sprintf("object expected, got %T", t)))
-	}
-	return nil
+	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, configurationsArg: %v, overridesArg: %v", resourceType, configurationsArg, overridesArg)))
 }

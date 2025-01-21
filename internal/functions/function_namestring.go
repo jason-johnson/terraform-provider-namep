@@ -38,7 +38,7 @@ func (f *NameStringFunction) Metadata(ctx context.Context, req function.Metadata
 func (f *NameStringFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
 		Summary:     "Generate an name string based on the resource type and a configuration",
-		Description: "This function creates a name for a terraform resource or field.\nThe resulting format will be used based on the the resource type selected and the configuration.",
+		Description: "This function creates a name for a terraform resource or field.\nThe resulting format will be used based on the the resource type selected and the configuration.  This allows users to create conventions for the names of all resources.",
 
 		Parameters: []function.Parameter{
 			function.StringParameter{

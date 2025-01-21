@@ -102,6 +102,11 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 	for _, overrideValue := range overridesArg {
 		if overrideValue == nil {
 			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("Got empty map for override"))
+			continue
+		}
+
+		for k, v := range overrideValue {
+			(*configurationsArg.Variables)[k] = v
 		}
 	}
 

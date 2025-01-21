@@ -3,6 +3,8 @@ package functions
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -80,10 +82,10 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 	var resourceType string
 
 	var configurationsArg struct {
-		Variables     *map[string]string              `tfsdk:"variables"`
-		Formats       *map[string]string              `tfsdk:"formats"`
-		Variable_maps *map[string](map[string]string) `tfsdk:"variable_maps"`
-		Types         *map[string]types.Object        `tfsdk:"types"`
+		Variables    *map[string]string              `tfsdk:"variables"`
+		Formats      *map[string]string              `tfsdk:"formats"`
+		VariableMaps *map[string](map[string]string) `tfsdk:"variable_maps"`
+		Types        *map[string]types.Object        `tfsdk:"types"`
 	}
 	var overridesArg []map[string]string
 
@@ -105,7 +107,7 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 		format, exists = (*configurationsArg.Formats)[typeInfo.DefaultSelector]
 
 		if !exists {
-			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type '%s' or default selector '%s'", resourceType, typeInfo.DefaultSelector)))
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type '%s' or default format '%s'", resourceType, typeInfo.DefaultSelector)))
 			return
 		}
 	}
@@ -121,5 +123,103 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 		}
 	}
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, configurationsArg: %v, overridesArg: %v, typeInfo: %v, format: %s", resourceType, configurationsArg, overridesArg, typeInfo, format)))
+	variables := keysToUpper(*configurationsArg.Variables)
+
+	variableMaps := make(map[string](map[string]string), len(*configurationsArg.VariableMaps))
+	for k, v := range *configurationsArg.VariableMaps {
+		variableMaps[strings.ToUpper(k)] = keysToUpper(v)
+	}
+
+	resp.Error = function.ConcatFuncErrors(resp.Error, setCalculatedName(ctx, typeInfo, format, variables, variableMaps, resp))
+}
+
+func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]string, variableMaps map[string](map[string]string), resp *function.RunResponse) *function.FuncError {
+	re := regexp.MustCompile(`#\{-?\w+-?}`)
+
+	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {
+		tl := len(token)
+		if tl < 1 {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("bizarre variable received %q", token)))
+			return token
+		}
+
+		token, prefixDash, postfixDash := preprocessToken(token[2 : tl-1])
+		tokenProcessed := true
+		var tokenResult string
+
+		if token == "SLUG" {
+			tokenResult = typeInfo.Slug
+		} else {
+			varName, varMapName := variableLocation(token)
+			var varMap map[string]string
+
+			if varMapName == "" {
+				varMap = variables
+			} else {
+				vm, mapExists := variableMaps[varMapName]
+				varMap = vm // Looks silly but it's because I don't want to have mapExists declared at the top
+
+				if !mapExists {
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable map found for %q", varMapName)))
+					tokenProcessed = false
+				}
+			}
+
+			v, varExists := varMap[varName]
+
+			if !varExists {
+				resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", token)))
+				tokenProcessed = false
+			} else {
+				tokenResult = v
+			}
+		}
+
+		if tokenProcessed && len(tokenResult) > 0 {
+			if prefixDash {
+				tokenResult = string('-') + tokenResult
+			} else if postfixDash {
+				tokenResult = tokenResult + string('-')
+			}
+		}
+
+		return tokenResult
+	})
+
+	return function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, result))
+}
+
+func keysToUpper(m map[string]string) map[string]string {
+	newMap := make(map[string]string, len(m))
+	for k, v := range m {
+		newMap[strings.ToUpper(k)] = v
+	}
+	return newMap
+}
+
+func preprocessToken(token string) (result string, pre bool, post bool) {
+	pre = false
+	post = false
+	result = token
+	l := len(token)
+
+	if token[0] == '-' {
+		pre = true
+		result = token[1:]
+	} else if token[l-1] == '-' {
+		post = true
+		result = token[0 : l-2]
+	}
+
+	return result, pre, post
+}
+
+func variableLocation(token string) (varName string, varMapName string) {
+	re := regexp.MustCompile(`\w+\[\w+]`)
+
+	if re.MatchString(token) {
+		return re.FindString(token), re.FindString(token)
+	}
+
+	return token, ""
 }

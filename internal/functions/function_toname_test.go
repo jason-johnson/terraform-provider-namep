@@ -87,7 +87,7 @@ locals {
 	    loc = "westeurope"
 	  }
 	  formats = {
-	    azurerm_resource_group = "#{APP}-#{ENV}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	    azurerm_resource_group = "#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 	  }
 
 	  types = {

@@ -22,13 +22,13 @@ func NewToNameFunction() function.Function {
 type ToNameFunction struct{}
 
 type typeFields struct {
-	Name               string `tfsdk:"name"`
-	Slug               string `tfsdk:"slug"`
-	MinLength          int32  `tfsdk:"min_length"`
-	MaxLength          int32  `tfsdk:"max_length"`
-	Lowercase          bool   `tfsdk:"lowercase"`
-	Validatation_regex string `tfsdk:"validatation_regex"`
-	DefaultSelector    string `tfsdk:"default_selector"`
+	Name              string `tfsdk:"name"`
+	Slug              string `tfsdk:"slug"`
+	MinLength         int    `tfsdk:"min_length"`
+	MaxLength         int    `tfsdk:"max_length"`
+	Lowercase         bool   `tfsdk:"lowercase"`
+	ValidatationRegex string `tfsdk:"validatation_regex"`
+	DefaultSelector   string `tfsdk:"default_selector"`
 }
 
 func (f *ToNameFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
@@ -92,8 +92,8 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
 
 	typeInfo := typeFields{
-		DefaultSelector:    "custom",
-		Validatation_regex: ".*", // No possible validation for default custom names
+		DefaultSelector:   "custom",
+		ValidatationRegex: ".*", // No possible validation for default custom names
 	}
 	for k, o := range *configurationsArg.Types {
 		if k == resourceType {
@@ -189,6 +189,8 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 		return tokenResult
 	})
 
+	resp.Error = validateResult(result, typeInfo, resp)
+
 	return function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, result))
 }
 
@@ -227,4 +229,22 @@ func variableLocation(token string) (varName string, varMapName string) {
 	}
 
 	return token, ""
+}
+
+func validateResult(result string, typeInfo typeFields, resp *function.RunResponse) *function.FuncError {
+	re := regexp.MustCompile(typeInfo.ValidatationRegex)
+
+	if !re.MatchString(result) {
+		if len(result) > typeInfo.MaxLength {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("resulting name is too long (%d > %d): %s", len(result), typeInfo.MaxLength, result)))
+		} else if typeInfo.Lowercase && strings.ToLower(result) != result {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("resulting name must be lowercase: %s", result)))
+		} else if len(result) < typeInfo.MinLength {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("resulting name is too short (%d < %d): %s", len(result), typeInfo.MinLength, result)))
+		} else {
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("Resulting name does not match the validation regex (validation regex: %s): %q", typeInfo.ValidatationRegex, result)))
+		}
+	}
+
+	return resp.Error
 }

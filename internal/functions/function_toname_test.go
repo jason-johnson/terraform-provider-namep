@@ -28,24 +28,6 @@ func TestCustomNameFunction_MapArgs(t *testing.T) {
 	})
 }
 
-func TestCustomNameFunction_TypeOnly(t *testing.T) {
-	t.Parallel()
-
-	resource.UnitTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: `output "test" {
-							value = provider::namep::toname("azurerm_key_vault")
-						}`,
-				Check: resource.TestCheckOutput("test", "test-value"),
-			},
-		},
-	})
-}
-
 // The example implementation does not enable AllowNullValue, however this
 // acceptance test shows how to verify the behavior.
 func TestCustomNameFunction_Null(t *testing.T) {
@@ -58,7 +40,7 @@ func TestCustomNameFunction_Null(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `output "test" {
-							value = provider::namep::toname(null)
+							value = provider::namep::toname(null, null)
 						}`,
 				ExpectError: regexp.MustCompile(`Invalid value for "resource_type" parameter: argument must not be null\.`),
 			},
@@ -79,7 +61,7 @@ func TestCustomNameFunction_Unknown(t *testing.T) {
 							input = "test-value"
 						}
 						output "test" {
-							value = provider::namep::toname(resource.terraform_data.test.output)
+							value = provider::namep::toname(resource.terraform_data.test.output, {formats = {}, variable_maps = {}, variables = {}, types = {}})
 						}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("test-value")),
@@ -107,6 +89,8 @@ locals {
 	  formats = {
 	    azurerm_resource_group = "#{APP}-#{ENV}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 	  }
+
+	  types = {}
 	}
 }
 

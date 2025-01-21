@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Ensure the implementation satisfies the desired interfaces.
@@ -17,6 +18,17 @@ func NewToNameFunction() function.Function {
 }
 
 type ToNameFunction struct{}
+
+type typeFields struct {
+	Type               *string `tfsdk:"type"`
+	Slug               *string `tfsdk:"slug"`
+	Min_length         *int32  `tfsdk:"min_length"`
+	Max_length         *int32  `tfsdk:"max_length"`
+	Lowercase          *bool   `tfsdk:"lowercase"`
+	Validatation_regex *string `tfsdk:"validatation_regex"`
+	Dashes             *bool   `tfsdk:"dashes"`
+	Scope              *string `tfsdk:"scope"`
+}
 
 func (f *ToNameFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
 	resp.Name = "toname"
@@ -39,6 +51,20 @@ func (f *ToNameFunction) Definition(ctx context.Context, req function.Definition
 					"variables":     types.MapType{ElemType: types.StringType},
 					"formats":       types.MapType{ElemType: types.StringType},
 					"variable_maps": types.MapType{ElemType: types.MapType{ElemType: types.StringType}},
+					"types": types.MapType{
+						ElemType: types.ObjectType{
+							AttrTypes: map[string]attr.Type{
+								"type":               types.StringType,
+								"slug":               types.StringType,
+								"min_length":         types.Int32Type,
+								"max_length":         types.Int32Type,
+								"lowercase":          types.BoolType,
+								"validatation_regex": types.StringType,
+								"dashes":             types.BoolType,
+								"scope":              types.StringType,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -54,14 +80,24 @@ func (f *ToNameFunction) Definition(ctx context.Context, req function.Definition
 
 func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var resourceType string
+
 	var configurationsArg struct {
 		Variables     *map[string]string              `tfsdk:"variables"`
 		Formats       *map[string]string              `tfsdk:"formats"`
 		Variable_maps *map[string](map[string]string) `tfsdk:"variable_maps"`
+		Types         *map[string]types.Object        `tfsdk:"types"`
 	}
 	var overridesArg []map[string]string
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
+	typeMap := make(map[string]typeFields)
+	for k, o := range *configurationsArg.Types {
+		v := typeFields{}
+		diag := o.As(ctx, &v, basetypes.ObjectAsOptions{})
+		resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
+
+		typeMap[k] = v
+	}
 
 	for _, overrideValue := range overridesArg {
 		if overrideValue == nil {
@@ -69,5 +105,5 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 		}
 	}
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, configurationsArg: %v, overridesArg: %v", resourceType, configurationsArg, overridesArg)))
+	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, fmt.Sprintf("type: %s, configurationsArg: %v, overridesArg: %v, typeMap: %v", resourceType, configurationsArg, overridesArg, typeMap)))
 }

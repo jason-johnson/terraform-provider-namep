@@ -13,13 +13,13 @@ import (
 )
 
 // Ensure the implementation satisfies the desired interfaces.
-var _ function.Function = &ToNameFunction{}
+var _ function.Function = &NameStringFunction{}
 
 func NewToNameFunction() function.Function {
-	return &ToNameFunction{}
+	return &NameStringFunction{}
 }
 
-type ToNameFunction struct{}
+type NameStringFunction struct{}
 
 type typeFields struct {
 	Name              string `tfsdk:"name"`
@@ -31,11 +31,11 @@ type typeFields struct {
 	DefaultSelector   string `tfsdk:"default_selector"`
 }
 
-func (f *ToNameFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
-	resp.Name = "toname"
+func (f *NameStringFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
+	resp.Name = "namestring"
 }
 
-func (f *ToNameFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
+func (f *NameStringFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
 		Summary:     "Generate an name string based on the resource type and a configuration",
 		Description: "This function creates a name for a terraform resource or field.\nThe resulting format will be used based on the the resource type selected and the configuration.",
@@ -78,7 +78,7 @@ func (f *ToNameFunction) Definition(ctx context.Context, req function.Definition
 	}
 }
 
-func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
+func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var resourceType string
 
 	var configurationsArg struct {

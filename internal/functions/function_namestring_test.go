@@ -23,7 +23,7 @@ func TestCustomNameFunction_Null(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `output "test" {
-							value = provider::namep::toname(null, null)
+							value = provider::namep::namestring(null, null)
 						}`,
 				ExpectError: regexp.MustCompile(`Invalid value for "resource_type" parameter: argument must not be null\.`),
 			},
@@ -39,7 +39,7 @@ func TestCustomNameFunction_ResourceGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_rg_format_fmt, `output "test" {
-					value = provider::namep::toname("azurerm_resource_group", local.config, { name = "mygroup" })
+					value = provider::namep::namestring("azurerm_resource_group", local.config, { name = "mygroup" })
 				}`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("myapp-dev-weu-mygroup-uxx1")),
@@ -57,7 +57,7 @@ func TestCustomNameFunction_GlobalFormat(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_default_format_fmt, `output "test" {
-					value = provider::namep::toname("azurerm_resource_group", local.config, { name = "mygroup" })
+					value = provider::namep::namestring("azurerm_resource_group", local.config, { name = "mygroup" })
 				}`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-mygroup-uxx1")),
@@ -75,7 +75,7 @@ func TestCustomNameFunction_DelayedFormat(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_default_delayed_format_fmt, `output "test" {
-					value = provider::namep::toname("azurerm_resource_group", local.config)
+					value = provider::namep::namestring("azurerm_resource_group", local.config)
 				}`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-test-value-uxx1")),
@@ -93,7 +93,7 @@ func TestCustomNameFunction_TooShort(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_default_format_fmt, `output "test" {
-					value = provider::namep::toname("too_short", local.config, { name = "main" })
+					value = provider::namep::namestring("too_short", local.config, { name = "main" })
 				}`),
 				ExpectError: regexp.MustCompile(`resulting name is too short`),
 			},
@@ -109,7 +109,7 @@ func TestCustomNameFunction_TooLong(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_default_format_fmt, `output "test" {
-					value = provider::namep::toname("too_long", local.config, { name = "main" })
+					value = provider::namep::namestring("too_long", local.config, { name = "main" })
 				}`),
 				ExpectError: regexp.MustCompile(`resulting name is too long`),
 			},
@@ -125,7 +125,7 @@ func TestCustomNameFunction_Bad_Case(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_default_format_fmt, `output "test" {
-					value = provider::namep::toname("azurerm_resource_group", local.config, { name = "MAIN" })
+					value = provider::namep::namestring("azurerm_resource_group", local.config, { name = "MAIN" })
 				}`),
 				ExpectError: regexp.MustCompile(`resulting name must be lowercase`),
 			},

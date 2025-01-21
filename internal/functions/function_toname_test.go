@@ -90,7 +90,17 @@ locals {
 	    azurerm_resource_group = "#{APP}-#{ENV}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 	  }
 
-	  types = {}
+	  types = {
+	    azurerm_resource_group = {
+		  name = "azurerm_resource_group"
+		  slug = "rg"
+		  min_length = 1
+		  max_length = 90
+		  lowercase = true
+		  validatation_regex = "^[a-z0-9-]*$"
+		  default_selector = "azure_true_global"
+		}
+	  }
 	}
 }
 

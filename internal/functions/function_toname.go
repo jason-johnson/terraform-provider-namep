@@ -107,14 +107,14 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 		format, exists = (*configurationsArg.Formats)[typeInfo.DefaultSelector]
 
 		if !exists {
-			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type '%s' or default format '%s'", resourceType, typeInfo.DefaultSelector)))
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type %q or default format %q", resourceType, typeInfo.DefaultSelector)))
 			return
 		}
 	}
 
 	for _, overrideValue := range overridesArg {
 		if overrideValue == nil {
-			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("Got empty map for override"))
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("Got null map for override"))
 			continue
 		}
 
@@ -134,7 +134,7 @@ func (f *ToNameFunction) Run(ctx context.Context, req function.RunRequest, resp 
 }
 
 func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]string, variableMaps map[string](map[string]string), resp *function.RunResponse) *function.FuncError {
-	re := regexp.MustCompile(`#\{-?\w+-?}`)
+	re := regexp.MustCompile(`#\{-?[\w[\]]+-?}`)
 
 	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {
 		tl := len(token)
@@ -151,28 +151,31 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 			tokenResult = typeInfo.Slug
 		} else {
 			varName, varMapName := variableLocation(token)
-			var varMap map[string]string
 
-			if varMapName == "" {
-				varMap = variables
-			} else {
+			v, varExists := variables[strings.ToUpper(varName)]
+
+			if !varExists {
+				resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", varName)))
+				return token
+			}
+
+			if varMapName != "" {
 				vm, mapExists := variableMaps[varMapName]
-				varMap = vm // Looks silly but it's because I don't want to have mapExists declared at the top
 
 				if !mapExists {
 					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable map found for %q", varMapName)))
-					tokenProcessed = false
+					return token
+				}
+
+				v, varExists = vm[strings.ToUpper(v)]
+
+				if !varExists {
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q in map %q", varName, varMapName)))
+					return token
 				}
 			}
 
-			v, varExists := varMap[varName]
-
-			if !varExists {
-				resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", token)))
-				tokenProcessed = false
-			} else {
-				tokenResult = v
-			}
+			tokenResult = v
 		}
 
 		if tokenProcessed && len(tokenResult) > 0 {
@@ -215,10 +218,12 @@ func preprocessToken(token string) (result string, pre bool, post bool) {
 }
 
 func variableLocation(token string) (varName string, varMapName string) {
-	re := regexp.MustCompile(`\w+\[\w+]`)
+	re := regexp.MustCompile(`(\w+)\[(\w+)]`)
 
-	if re.MatchString(token) {
-		return re.FindString(token), re.FindString(token)
+	matches := re.FindAllStringSubmatch(token, -1)
+
+	if matches != nil {
+		return matches[0][2], matches[0][1]
 	}
 
 	return token, ""

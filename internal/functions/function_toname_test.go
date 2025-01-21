@@ -1,6 +1,7 @@
 package functions_test
 
 import (
+	"fmt"
 	"regexp"
 	"terraform-provider-namep/internal/provider"
 	"testing"
@@ -12,27 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 )
 
-func TestCustomNameFunction_MapArgs(t *testing.T) {
-	t.Parallel()
-
-	resource.UnitTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFuncCustomName_map_args_custom_rg_fmt,
-				Check:  resource.TestCheckOutput("test", "test-value"),
-			},
-		},
-	})
-}
-
 // The example implementation does not enable AllowNullValue, however this
 // acceptance test shows how to verify the behavior.
 func TestCustomNameFunction_Null(t *testing.T) {
-	t.Parallel()
-
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
@@ -48,30 +31,65 @@ func TestCustomNameFunction_Null(t *testing.T) {
 	})
 }
 
-// The example implementation does not enable AllowUnknownValues, however this
-// acceptance test shows how to verify the behavior.
-func TestCustomNameFunction_Unknown(t *testing.T) {
+func TestCustomNameFunction_ResourceGroup(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: `resource "terraform_data" "test" {
-							input = "test-value"
-						}
-						output "test" {
-							value = provider::namep::toname(resource.terraform_data.test.output, {formats = {}, variable_maps = {}, variables = {}, types = {}})
-						}`,
+				Config: fmt.Sprintf("%s %s", config_with_rg_format_fmt, `output "test" {
+					value = provider::namep::toname("azurerm_resource_group", local.config, { name = "mygroup" })
+				}`),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("test-value")),
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("myapp-dev-weu-mygroup-uxx1")),
 				},
 			},
 		},
 	})
 }
 
-const testAccFuncCustomName_map_args_custom_rg_fmt = `
+func TestCustomNameFunction_GlobalFormat(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf("%s %s", config_with_default_format_fmt, `output "test" {
+					value = provider::namep::toname("azurerm_resource_group", local.config, { name = "mygroup" })
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-mygroup-uxx1")),
+				},
+			},
+		},
+	})
+}
+
+func TestCustomNameFunction_DelayedFormat(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf("%s %s", config_with_default_delayed_format_fmt, `output "test" {
+					value = provider::namep::toname("azurerm_resource_group", local.config)
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-test-value-uxx1")),
+				},
+			},
+		},
+	})
+}
+
+const default_config_fmt = `
+resource "terraform_data" "test" {
+  input = "test-value"
+}
+
 locals {
 	config = {
 	  variable_maps = {
@@ -85,10 +103,10 @@ locals {
 	    env = "dev"
 	    salt = "uxx1"
 	    loc = "westeurope"
+		testoutput = resource.terraform_data.test.output
 	  }
-	  formats = {
-	    azurerm_resource_group = "#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
-	  }
+
+	  %s
 
 	  types = {
 	    azurerm_resource_group = {
@@ -103,8 +121,16 @@ locals {
 	  }
 	}
 }
-
-output "test" {
-    value = provider::namep::toname("azurerm_resource_group", local.config, { name = "mygroup" })
-}
 `
+
+var config_with_rg_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
+	    azurerm_resource_group = "#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+}`)
+
+var config_with_default_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
+	azure_true_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+}`)
+
+var config_with_default_delayed_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
+	azure_true_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{testoutput}#{-SALT}"
+}`)

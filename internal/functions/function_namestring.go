@@ -27,7 +27,7 @@ type typeFields struct {
 	MinLength         int    `tfsdk:"min_length"`
 	MaxLength         int    `tfsdk:"max_length"`
 	Lowercase         bool   `tfsdk:"lowercase"`
-	ValidatationRegex string `tfsdk:"validatation_regex"`
+	ValidatationRegex string `tfsdk:"validation_regex"`
 	DefaultSelector   string `tfsdk:"default_selector"`
 }
 
@@ -55,13 +55,13 @@ func (f *NameStringFunction) Definition(ctx context.Context, req function.Defini
 					"types": types.MapType{
 						ElemType: types.ObjectType{
 							AttrTypes: map[string]attr.Type{
-								"name":               types.StringType,
-								"slug":               types.StringType,
-								"min_length":         types.Int32Type,
-								"max_length":         types.Int32Type,
-								"lowercase":          types.BoolType,
-								"validatation_regex": types.StringType,
-								"default_selector":   types.StringType,
+								"name":             types.StringType,
+								"slug":             types.StringType,
+								"min_length":       types.Int32Type,
+								"max_length":       types.Int32Type,
+								"lowercase":        types.BoolType,
+								"validation_regex": types.StringType,
+								"default_selector": types.StringType,
 							},
 						},
 					},

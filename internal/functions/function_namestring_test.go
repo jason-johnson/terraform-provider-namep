@@ -163,7 +163,7 @@ locals {
 		  min_length = 1
 		  max_length = 90
 		  lowercase = true
-		  validatation_regex = "^[a-z0-9-]*$"
+		  validation_regex = "^[a-z0-9-]*$"
 		  default_selector = "azure_true_global"
 		}
 		too_short = {
@@ -172,7 +172,7 @@ locals {
 		  min_length = 100
 		  max_length = 200
 		  lowercase = true
-		  validatation_regex = "^[a-z0-9-]{100-200}$"
+		  validation_regex = "^[a-z0-9-]{100-200}$"
 		  default_selector = "azure_true_global"
 		}
 		too_long = {
@@ -181,7 +181,7 @@ locals {
 		  min_length = 1
 		  max_length = 2
 		  lowercase = true
-		  validatation_regex = "^[a-z0-9-]{1-2}$"
+		  validation_regex = "^[a-z0-9-]{1-2}$"
 		  default_selector = "azure_true_global"
 		}
 	  }

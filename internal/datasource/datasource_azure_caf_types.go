@@ -197,7 +197,12 @@ func toSharedTypeFields(def cafTypeFields) shared.TypeFields {
 		dashes = "dashes"
 	}
 	defaultSelector := fmt.Sprintf("azure_%s_%s", dashes, def.Scope)
-	validationRegex, _ := strconv.Unquote(def.ValidatationRegex)
+	validationRegex, err := strconv.Unquote(def.ValidatationRegex)
+
+	if err != nil {
+		tflog.Error(context.Background(), fmt.Sprintf("Failed to unquote validation regex: %v", err))
+		validationRegex = def.ValidatationRegex
+	}
 
 	return shared.TypeFields{
 		Name:            def.Name,

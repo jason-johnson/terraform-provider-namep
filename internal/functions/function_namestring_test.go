@@ -144,7 +144,7 @@ func TestCustomNameFunction_AzureCaf(t *testing.T) {
 					value = provider::namep::namestring("azurerm_resource_group", local.config)
 				}`),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-test-value-uxx1")),
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-main-uxx1")),
 				},
 			},
 		},

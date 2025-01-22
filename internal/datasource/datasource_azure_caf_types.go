@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"terraform-provider-namep/internal/shared"
 	"terraform-provider-namep/internal/utils"
@@ -196,6 +197,7 @@ func toSharedTypeFields(def cafTypeFields) shared.TypeFields {
 		dashes = "dashes"
 	}
 	defaultSelector := fmt.Sprintf("azure_%s_%s", dashes, def.Scope)
+	validationRegex, _ := strconv.Unquote(def.ValidatationRegex)
 
 	return shared.TypeFields{
 		Name:            def.Name,
@@ -203,7 +205,7 @@ func toSharedTypeFields(def cafTypeFields) shared.TypeFields {
 		MinLength:       def.MinLength,
 		MaxLength:       def.MaxLength,
 		Lowercase:       def.Lowercase,
-		ValidationRegex: def.ValidatationRegex,
+		ValidationRegex: validationRegex,
 		DefaultSelector: defaultSelector,
 	}
 }

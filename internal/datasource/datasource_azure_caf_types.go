@@ -40,14 +40,14 @@ type azureCafTypesDataSourceModel struct {
 }
 
 type cafTypeFields struct {
-	Name              string `tfsdk:"name"`
-	Slug              string `tfsdk:"slug"`
-	MinLength         int    `tfsdk:"min_length"`
-	MaxLength         int    `tfsdk:"max_length"`
-	Lowercase         bool   `tfsdk:"lowercase"`
-	ValidatationRegex string `tfsdk:"validatation_regex"`
-	Dashes            bool   `tfsdk:"dashes"`
-	Scope             string `tfsdk:"scope"`
+	Name              string `json:"name"`
+	Slug              string `json:"slug"`
+	MinLength         int    `json:"min_length"`
+	MaxLength         int    `json:"max_length"`
+	Lowercase         bool   `json:"lowercase"`
+	ValidatationRegex string `json:"validation_regex"`
+	Dashes            bool   `json:"dashes"`
+	Scope             string `json:"scope"`
 }
 
 func (d *azureCafTypesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -76,13 +76,13 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 				Computed:    true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"name":               types.StringType,
-						"slug":               types.StringType,
-						"min_length":         types.Int32Type,
-						"max_length":         types.Int32Type,
-						"lowercase":          types.BoolType,
-						"validatation_regex": types.StringType,
-						"default_selector":   types.StringType,
+						"name":             types.StringType,
+						"slug":             types.StringType,
+						"min_length":       types.Int32Type,
+						"max_length":       types.Int32Type,
+						"lowercase":        types.BoolType,
+						"validation_regex": types.StringType,
+						"default_selector": types.StringType,
 					},
 				},
 			},
@@ -154,12 +154,12 @@ func toSharedTypeFields(def cafTypeFields) shared.TypeFields {
 	defaultSelector := fmt.Sprintf("azure_%s_%s", dashes, def.Scope)
 
 	return shared.TypeFields{
-		Name:              def.Name,
-		Slug:              def.Slug,
-		MinLength:         def.MinLength,
-		MaxLength:         def.MaxLength,
-		Lowercase:         def.Lowercase,
-		ValidatationRegex: def.ValidatationRegex,
-		DefaultSelector:   defaultSelector,
+		Name:            def.Name,
+		Slug:            def.Slug,
+		MinLength:       def.MinLength,
+		MaxLength:       def.MaxLength,
+		Lowercase:       def.Lowercase,
+		ValidationRegex: def.ValidatationRegex,
+		DefaultSelector: defaultSelector,
 	}
 }

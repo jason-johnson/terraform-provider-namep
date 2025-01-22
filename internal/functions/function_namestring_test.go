@@ -133,6 +133,24 @@ func TestCustomNameFunction_Bad_Case(t *testing.T) {
 	})
 }
 
+func TestCustomNameFunction_AzureCaf(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf("%s %s", config_with_azure_caf_types_fmt, `output "test" {
+					value = provider::namep::namestring("azurerm_resource_group", local.config)
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-test-value-uxx1")),
+				},
+			},
+		},
+	})
+}
+
 const default_config_fmt = `
 resource "terraform_data" "test" {
   input = "test-value"
@@ -164,7 +182,7 @@ locals {
 		  max_length = 90
 		  lowercase = true
 		  validation_regex = "^[a-z0-9-]*$"
-		  default_selector = "azure_true_global"
+		  default_selector = "azure_dashes_global"
 		}
 		too_short = {
 		  name = "too_short"
@@ -173,7 +191,7 @@ locals {
 		  max_length = 200
 		  lowercase = true
 		  validation_regex = "^[a-z0-9-]{100-200}$"
-		  default_selector = "azure_true_global"
+		  default_selector = "azure_dashes_global"
 		}
 		too_long = {
 		  name = "too_long"
@@ -182,7 +200,7 @@ locals {
 		  max_length = 2
 		  lowercase = true
 		  validation_regex = "^[a-z0-9-]{1-2}$"
-		  default_selector = "azure_true_global"
+		  default_selector = "azure_dashes_global"
 		}
 	  }
 	}
@@ -194,9 +212,36 @@ var config_with_rg_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
 }`)
 
 var config_with_default_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
-	azure_true_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 }`)
 
 var config_with_default_delayed_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
-	azure_true_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{testoutput}#{-SALT}"
+	azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{testoutput}#{-SALT}"
 }`)
+
+const config_with_azure_caf_types_fmt = `
+data "namep_azure_caf_types" "example" {}
+
+locals {
+	config = {
+	  variable_maps = {
+	    locs = {
+		  westeurope = "weu"											
+		}
+	  }
+	  variables = {
+	    name = "main"
+	    app = "myapp"
+	    env = "dev"
+	    salt = "uxx1"
+	    loc = "westeurope"
+	  }
+
+	  formats = {
+	  	azure_dashes_subscription = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	  }
+
+	  types = data.namep_azure_caf_types.example.types
+	}
+}
+`

@@ -9,7 +9,3 @@ const defaultGlobalResourceNameFormatProp string = "default_global_resource_name
 const defaultGlobalNodashNameFormatProp string = "default_global_nodash_name_format"
 const azureResourceFormatsProp string = "azure_resource_formats"
 const customResourceFormatsProp string = "custom_resource_formats"
-const nameProp string = "name"
-const typeProp string = "type"
-const locationProp string = "location"
-const resultProp string = "result"

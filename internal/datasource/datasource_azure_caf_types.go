@@ -2,6 +2,10 @@ package datasource
 
 import (
 	"context"
+	"fmt"
+
+	"terraform-provider-namep/internal/shared"
+	"terraform-provider-namep/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -9,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -25,6 +30,24 @@ func NewAzureCafTypes() datasource.DataSource {
 
 // data source implementation.
 type azureCafTypesDataSource struct {
+}
+
+type azureCafTypesDataSourceModel struct {
+	ID      types.String `tfsdk:"id"`
+	Newest  types.Bool   `tfsdk:"newest"`
+	Version types.String `tfsdk:"version"`
+	Types   types.Map    `tfsdk:"types"`
+}
+
+type cafTypeFields struct {
+	Name              string `tfsdk:"name"`
+	Slug              string `tfsdk:"slug"`
+	MinLength         int    `tfsdk:"min_length"`
+	MaxLength         int    `tfsdk:"max_length"`
+	Lowercase         bool   `tfsdk:"lowercase"`
+	ValidatationRegex string `tfsdk:"validatation_regex"`
+	Dashes            bool   `tfsdk:"dashes"`
+	Scope             string `tfsdk:"scope"`
 }
 
 func (d *azureCafTypesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -77,9 +100,66 @@ func (d *azureCafTypesDataSource) ConfigValidators(context.Context) []datasource
 }
 
 func (d *azureCafTypesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-
 }
 
 func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var config azureCafTypesDataSourceModel
 
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+
+	var defs []cafTypeFields
+
+	err := utils.GetJSON("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition.json", &defs)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to fetch Azure CAF types", err.Error())
+		return
+	}
+
+	var oodDefs []cafTypeFields
+
+	err = utils.GetJSON("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition_out_of_docs.json", &oodDefs)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to fetch Azure CAF types", err.Error())
+		return
+	}
+
+	results := make(map[string]shared.TypeFields, len(defs)+len(oodDefs))
+
+	for _, def := range oodDefs {
+
+		results[def.Name] = toSharedTypeFields(def)
+	}
+
+	for _, def := range defs {
+		results[def.Name] = toSharedTypeFields(def)
+	}
+
+	config.ID = types.StringValue("foo")
+
+	// Write logs using the tflog package
+	// Documentation: https://terraform.io/plugin/log
+	tflog.Trace(ctx, "read azure name data source")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+}
+
+func toSharedTypeFields(def cafTypeFields) shared.TypeFields {
+	dashes := "nodashes"
+	if def.Dashes {
+		dashes = "dashes"
+	}
+	defaultSelector := fmt.Sprintf("azure_%s_%s", dashes, def.Scope)
+
+	return shared.TypeFields{
+		Name:              def.Name,
+		Slug:              def.Slug,
+		MinLength:         def.MinLength,
+		MaxLength:         def.MaxLength,
+		Lowercase:         def.Lowercase,
+		ValidatationRegex: def.ValidatationRegex,
+		DefaultSelector:   defaultSelector,
+	}
 }

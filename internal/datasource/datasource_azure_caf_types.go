@@ -35,7 +35,7 @@ type azureCafTypesDataSource struct {
 }
 
 type azureCafTypesDataSourceModel struct {
-	ID      types.String `tfsdk:"id"`
+	Source      types.String `tfsdk:"source"`
 	Newest  types.Bool   `tfsdk:"newest"`
 	Version types.String `tfsdk:"version"`
 	Types   types.Map    `tfsdk:"types"`
@@ -61,7 +61,8 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 	resp.Schema = schema.Schema{
 		Description: "This data resource fetches types from the Azure CAF project for use in the configuration parameter of `namestring`.",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"source": schema.StringAttribute{
+				Description: "The source URL the Azure CAF types were loaded from.",
 				Computed: true,
 			},
 			"newest": schema.BoolAttribute{
@@ -144,7 +145,7 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	config.ID = types.StringValue("foo")
+	config.Source = types.StringValue(cafUrl)
 	config.Types = result
 
 	// Write logs using the tflog package
@@ -165,7 +166,8 @@ func typesAttributes() types.ObjectType {
 			"lowercase":        types.BoolType,
 			"validation_regex": types.StringType,
 			"default_selector": types.StringType,
-		}}
+		},
+	}
 }
 
 func getResourceFileStrings(versionString types.String) (string, string, error) {

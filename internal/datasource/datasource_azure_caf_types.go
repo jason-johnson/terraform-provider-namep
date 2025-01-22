@@ -42,13 +42,14 @@ type azureCafTypesDataSourceModel struct {
 
 type cafTypeFields struct {
 	Name              string `json:"name"`
-	Slug              string `json:"slug"`
+	Slug              string `json:"slug,omitempty"`
 	MinLength         int    `json:"min_length"`
 	MaxLength         int    `json:"max_length"`
-	Lowercase         bool   `json:"lowercase"`
-	ValidatationRegex string `json:"validation_regex"`
+	Lowercase         bool   `json:"lowercase,omitempty"`
+	Regex             string `json:"regex,omitempty"`
+	ValidatationRegex string `json:"validation_regex,omitempty"`
 	Dashes            bool   `json:"dashes"`
-	Scope             string `json:"scope"`
+	Scope             string `json:"scope,omitempty"`
 }
 
 func (d *azureCafTypesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

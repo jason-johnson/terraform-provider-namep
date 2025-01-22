@@ -3,6 +3,7 @@ package datasource
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"terraform-provider-namep/internal/shared"
 	"terraform-provider-namep/internal/utils"
@@ -67,16 +68,15 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 				Optional:    true,
 			},
 			"version": schema.StringAttribute{
-				Description: "The version of the Azure CAF types to fetch.  Cannot be set with `newest`.",
-				Required:    false,
-				Optional:    true,
+				Description: `The version of the Azure CAF types to fetch.  The newest version will be used if not specified.
+							  Possible to specify a branch name, tag name or commit hash (hash must be unique but does not have to be complete).`,
+				Required: false,
+				Optional: true,
 			},
 			"types": schema.MapAttribute{
 				Description: "The type info map loaded from the Azure CAF project.",
 				Computed:    true,
-				ElementType: types.ObjectType{
-					AttrTypes: typesObjectAttributes(),
-				},
+				ElementType: typesAttributes(),
 			},
 		},
 	}
@@ -99,9 +99,16 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
+	cafUrl, oodCafUrl, err := getResourceFileStrings(config.Version)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to determine the version to fetch", err.Error())
+		return
+	}
+
 	var defs []cafTypeFields
 
-	err := utils.GetJSON("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition.json", &defs)
+	err = utils.GetJSON(cafUrl, &defs)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to fetch Azure CAF types", err.Error())
@@ -110,24 +117,33 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	var oodDefs []cafTypeFields
 
-	err = utils.GetJSON("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition_out_of_docs.json", &oodDefs)
+	err = utils.GetJSON(oodCafUrl, &oodDefs)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to fetch 'out of doc' Azure CAF types", err.Error())
 		return
 	}
 
-	results := make(map[string]shared.TypeFields, len(defs)+len(oodDefs))
+	typeInfoMap := make(map[string]shared.TypeFields, len(defs)+len(oodDefs))
 
 	for _, def := range oodDefs {
-		results[def.Name] = toSharedTypeFields(def)
+		typeInfoMap[def.Name] = toSharedTypeFields(def)
 	}
 
 	for _, def := range defs {
-		results[def.Name] = toSharedTypeFields(def)
+		typeInfoMap[def.Name] = toSharedTypeFields(def)
+	}
+
+	typesAttrs := typesAttributes()
+	result, diag := types.MapValueFrom(ctx, typesAttrs, typeInfoMap)
+
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag.Errors()...)
+		return
 	}
 
 	config.ID = types.StringValue("foo")
+	config.Types = result
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -137,16 +153,40 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func typesObjectAttributes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"name":             types.StringType,
-		"slug":             types.StringType,
-		"min_length":       types.Int32Type,
-		"max_length":       types.Int32Type,
-		"lowercase":        types.BoolType,
-		"validation_regex": types.StringType,
-		"default_selector": types.StringType,
+func typesAttributes() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":             types.StringType,
+			"slug":             types.StringType,
+			"min_length":       types.Int32Type,
+			"max_length":       types.Int32Type,
+			"lowercase":        types.BoolType,
+			"validation_regex": types.StringType,
+			"default_selector": types.StringType,
+		}}
+}
+
+func getResourceFileStrings(versionString types.String) (string, string, error) {
+	version := versionString.ValueString()
+
+	if versionString.IsNull() {
+		version = "master"
 	}
+
+	if versionString.IsUnknown() {
+		return "", "", fmt.Errorf("unknown version received, please specify the version directly") // should be impossible
+	}
+
+	re := regexp.MustCompile(`/^v\d+\.\d+\.\d+(-preview)?$/gm`)
+
+	if re.MatchString(version) {
+		version = fmt.Sprintf("refs/tags/%s", version)
+	}
+
+	caf := fmt.Sprintf("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/%s/resourceDefinition.json", version)
+	oodcaf := fmt.Sprintf("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/%s/resourceDefinition_out_of_docs.json", version)
+
+	return caf, oodcaf, nil
 }
 
 func toSharedTypeFields(def cafTypeFields) shared.TypeFields {

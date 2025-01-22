@@ -75,15 +75,7 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 				Description: "The type info map loaded from the Azure CAF project.",
 				Computed:    true,
 				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"name":             types.StringType,
-						"slug":             types.StringType,
-						"min_length":       types.Int32Type,
-						"max_length":       types.Int32Type,
-						"lowercase":        types.BoolType,
-						"validation_regex": types.StringType,
-						"default_selector": types.StringType,
-					},
+					AttrTypes: typesObjectAttributes(),
 				},
 			},
 		},
@@ -121,14 +113,13 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 	err = utils.GetJSON("https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition_out_of_docs.json", &oodDefs)
 
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to fetch Azure CAF types", err.Error())
+		resp.Diagnostics.AddError("Failed to fetch 'out of doc' Azure CAF types", err.Error())
 		return
 	}
 
 	results := make(map[string]shared.TypeFields, len(defs)+len(oodDefs))
 
 	for _, def := range oodDefs {
-
 		results[def.Name] = toSharedTypeFields(def)
 	}
 
@@ -144,6 +135,18 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+}
+
+func typesObjectAttributes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name":             types.StringType,
+		"slug":             types.StringType,
+		"min_length":       types.Int32Type,
+		"max_length":       types.Int32Type,
+		"lowercase":        types.BoolType,
+		"validation_regex": types.StringType,
+		"default_selector": types.StringType,
+	}
 }
 
 func toSharedTypeFields(def cafTypeFields) shared.TypeFields {

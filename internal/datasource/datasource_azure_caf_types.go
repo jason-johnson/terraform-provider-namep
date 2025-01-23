@@ -10,7 +10,6 @@ import (
 	"terraform-provider-namep/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -35,7 +34,7 @@ type azureCafTypesDataSource struct {
 }
 
 type azureCafTypesDataSourceModel struct {
-	Source      types.String `tfsdk:"source"`
+	Source  types.String `tfsdk:"source"`
 	Newest  types.Bool   `tfsdk:"newest"`
 	Version types.String `tfsdk:"version"`
 	Types   types.Map    `tfsdk:"types"`
@@ -63,7 +62,7 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 		Attributes: map[string]schema.Attribute{
 			"source": schema.StringAttribute{
 				Description: "The source URL the Azure CAF types were loaded from.",
-				Computed: true,
+				Computed:    true,
 			},
 			"newest": schema.BoolAttribute{
 				Description: "If true, this data source will always check if it has the latest version of the data.",
@@ -154,20 +153,6 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
-}
-
-func typesAttributes() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":             types.StringType,
-			"slug":             types.StringType,
-			"min_length":       types.Int32Type,
-			"max_length":       types.Int32Type,
-			"lowercase":        types.BoolType,
-			"validation_regex": types.StringType,
-			"default_selector": types.StringType,
-		},
-	}
 }
 
 func getResourceFileStrings(versionString types.String) (string, string, error) {

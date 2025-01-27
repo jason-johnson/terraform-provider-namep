@@ -9,19 +9,15 @@ import (
 	"terraform-provider-namep/internal/shared"
 	"terraform-provider-namep/internal/utils"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource                     = &azureCafTypesDataSource{}
-	_ datasource.DataSourceWithConfigure        = &azureCafTypesDataSource{}
-	_ datasource.DataSourceWithConfigValidators = &azureCafTypesDataSource{}
+	_ datasource.DataSource = &azureCafTypesDataSource{}
 )
 
 // New is a helper function to simplify the provider implementation.
@@ -35,7 +31,6 @@ type azureCafTypesDataSource struct {
 
 type azureCafTypesDataSourceModel struct {
 	Source  types.String `tfsdk:"source"`
-	Newest  types.Bool   `tfsdk:"newest"`
 	Version types.String `tfsdk:"version"`
 	Types   types.Map    `tfsdk:"types"`
 }
@@ -64,11 +59,6 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 				Description: "The source URL the Azure CAF types were loaded from.",
 				Computed:    true,
 			},
-			"newest": schema.BoolAttribute{
-				Description: "If true, this data source will always check if it has the latest version of the data.",
-				Required:    false,
-				Optional:    true,
-			},
 			"version": schema.StringAttribute{
 				Description: `The version of the Azure CAF types to fetch.  The newest version will be used if not specified.
 							  Possible to specify a branch name, tag name or commit hash (hash must be unique but does not have to be complete).`,
@@ -82,18 +72,6 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 			},
 		},
 	}
-}
-
-func (d *azureCafTypesDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
-	return []datasource.ConfigValidator{
-		datasourcevalidator.Conflicting(
-			path.MatchRoot("newest"),
-			path.MatchRoot("version"),
-		),
-	}
-}
-
-func (d *azureCafTypesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 }
 
 func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

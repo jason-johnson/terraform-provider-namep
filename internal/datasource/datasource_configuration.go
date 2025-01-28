@@ -1,0 +1,122 @@
+package datasource
+
+import (
+	"context"
+
+	"terraform-provider-namep/internal/shared"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+// Ensure the implementation satisfies the expected interfaces.
+var (
+	_ datasource.DataSource              = &configurationDataSource{}
+	_ datasource.DataSourceWithConfigure = &configurationDataSource{}
+)
+
+// New is a helper function to simplify the provider implementation.
+func NewConfiguration() datasource.DataSource {
+	return &configurationDataSource{}
+}
+
+// data source implementation.
+type configurationDataSource struct {
+}
+
+type configurationDataSourceModel struct {
+	Formats       types.Map    `tfsdk:"formats"`
+	Variables     types.Map    `tfsdk:"variables"`
+	VariableMaps  types.Map    `tfsdk:"variable_maps"`
+	Types         types.Map    `tfsdk:"types"`
+	Configuration types.Object `tfsdk:"configuration"`
+}
+
+func (d *configurationDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_configuration"
+}
+
+func (d *configurationDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Description: "This data resource fetches types from the Azure CAF project for use in the configuration parameter of `namestring`.",
+		Attributes: map[string]schema.Attribute{
+			"formats": schema.MapAttribute{
+				Description: "Formats map to include in final configuration.",
+				Required:    false,
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"variables": schema.MapAttribute{
+				Description: "Variables map to include in final configuration.",
+				Required:    false,
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"variable_maps": schema.MapAttribute{
+				Description: "Variable maps map to include in final configuration.",
+				Required:    false,
+				Optional:    true,
+				ElementType: types.MapType{
+					ElemType: types.StringType,
+				},
+			},
+			"types": schema.MapAttribute{
+				Description: `A map of types to include in the final configuration.`,
+				Required:    false,
+				Optional:    true,
+				ElementType: typesAttributes(),
+			},
+			"configuration": schema.ObjectAttribute{
+				Description: "The configuration produced from the inputs.",
+				Computed:    true,
+				AttributeTypes: map[string]attr.Type{
+					"formats": types.MapType{
+						ElemType: types.StringType,
+					},
+					"variables": types.MapType{
+						ElemType: types.StringType,
+					},
+					"variable_maps": types.MapType{
+						ElemType: types.MapType{
+							ElemType: types.StringType,
+						},
+					},
+					"types": types.MapType{
+						ElemType: typesAttributes(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func (d *configurationDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+}
+
+func (d *configurationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var config configurationDataSourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+
+	typeInfoMap := make(map[string]shared.TypeFields)
+
+	typesAttrs := typesAttributes()
+	result, diag := types.MapValueFrom(ctx, typesAttrs, typeInfoMap)
+
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag.Errors()...)
+		return
+	}
+
+	config.Types = result
+
+	// Write logs using the tflog package
+	// Documentation: https://terraform.io/plugin/log
+	tflog.Trace(ctx, "read configuration data source")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+}

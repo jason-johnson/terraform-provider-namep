@@ -151,6 +151,7 @@ func (p *namepProvider) DataSources(_ context.Context) []func() datasource.DataS
 	return []func() datasource.DataSource{
 		namep.NewCustom,
 		namep.NewAzureCafTypes,
+		namep.NewConfiguration,
 	}
 }
 

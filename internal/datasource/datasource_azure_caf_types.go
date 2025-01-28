@@ -127,7 +127,7 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "read azure name data source")
+	tflog.Trace(ctx, "read azure caf type data source")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)

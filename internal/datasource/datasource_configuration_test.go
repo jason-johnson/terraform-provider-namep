@@ -10,12 +10,122 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func TestAccDataSourceConfiguration_read(t *testing.T) {
+func TestAccDataSourceConfiguration_empty(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `data "namep_configuration" "example" {}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"data.namep_configuration.example",
+						tfjsonpath.New("types"),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"azurerm_resource_group": knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact("azurerm_resource_group"),
+								"slug": knownvalue.StringExact("rg"),
+							}),
+						}),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataSourceConfiguration_formats(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `data "namep_configuration" "example" {
+				  formats = {
+				    "example": "example"
+				  }
+				}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"data.namep_configuration.example",
+						tfjsonpath.New("types"),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"azurerm_resource_group": knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact("azurerm_resource_group"),
+								"slug": knownvalue.StringExact("rg"),
+							}),
+						}),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataSourceConfiguration_variables(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `data "namep_configuration" "example" {
+				  variables = {
+				    "example": "example"
+				  }
+				}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"data.namep_configuration.example",
+						tfjsonpath.New("types"),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"azurerm_resource_group": knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact("azurerm_resource_group"),
+								"slug": knownvalue.StringExact("rg"),
+							}),
+						}),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataSourceConfiguration_variable_maps(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `data "namep_configuration" "example" {
+				  variable_maps = {
+				    "example": {
+				    	"example": "example"
+					}
+				  }
+				}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"data.namep_configuration.example",
+						tfjsonpath.New("types"),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"azurerm_resource_group": knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact("azurerm_resource_group"),
+								"slug": knownvalue.StringExact("rg"),
+							}),
+						}),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataSourceConfiguration_types(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `data "namep_azure_caf_types" "example" {}
+
+				data "namep_configuration" "example" {
+				  types = data.namep_azure_caf_types.example.types
+				}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"data.namep_configuration.example",

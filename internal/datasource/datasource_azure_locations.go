@@ -18,7 +18,7 @@ var (
 )
 
 // New is a helper function to simplify the provider implementation.
-func NewLocations() datasource.DataSource {
+func NewAzureLocations() datasource.DataSource {
 	return &azureLocationsDataSource{}
 }
 
@@ -34,7 +34,7 @@ type azureLocationsDataSourceModel struct {
 }
 
 func (d *azureLocationsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_configuration"
+	resp.TypeName = req.ProviderTypeName + "_azure_locations"
 }
 
 func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {

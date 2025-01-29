@@ -13,8 +13,7 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &configurationDataSource{}
-	_ datasource.DataSourceWithConfigure = &configurationDataSource{}
+	_ datasource.DataSource = &configurationDataSource{}
 )
 
 // New is a helper function to simplify the provider implementation.
@@ -82,9 +81,6 @@ func (d *configurationDataSource) Schema(ctx context.Context, ds datasource.Sche
 			},
 		},
 	}
-}
-
-func (d *configurationDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 }
 
 func (d *configurationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

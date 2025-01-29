@@ -94,19 +94,20 @@ func TestAccDataSourceConfiguration_variable_maps(t *testing.T) {
 			{
 				Config: `data "namep_configuration" "example" {
 				  variable_maps = {
-				    "example": {
-				    	"example": "example"
+				    "example_map": {
+				    	"example_key": "example_value"
 					}
 				  }
 				}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"data.namep_configuration.example",
-						tfjsonpath.New("types"),
-						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"azurerm_resource_group": knownvalue.ObjectPartial(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact("azurerm_resource_group"),
-								"slug": knownvalue.StringExact("rg"),
+						tfjsonpath.New("configuration"),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"variable_maps": knownvalue.MapExact(map[string]knownvalue.Check{
+								"example_map": knownvalue.MapExact(map[string]knownvalue.Check{
+									"example_key": knownvalue.StringExact("example_value"),
+								}),
 							}),
 						}),
 					),

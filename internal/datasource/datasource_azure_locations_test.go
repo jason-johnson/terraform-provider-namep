@@ -15,16 +15,14 @@ func TestAccDataSourceAzureLocations_empty(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "namep_configuration" "example" {}`,
+				Config: `data "namep_azure_locations" "example" {}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"data.namep_configuration.example",
-						tfjsonpath.New("configuration"),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"formats":       knownvalue.MapExact(map[string]knownvalue.Check{}),
-							"variables":     knownvalue.MapExact(map[string]knownvalue.Check{}),
-							"variable_maps": knownvalue.MapExact(map[string]knownvalue.Check{}),
-							"types":         knownvalue.MapExact(map[string]knownvalue.Check{}),
+						"data.namep_azure_locations.example",
+						tfjsonpath.New("location_maps"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"loc":                   knownvalue.MapPartial(map[string]knownvalue.Check{}),
+							"loc_from_display_name": knownvalue.MapPartial(map[string]knownvalue.Check{}),
 						}),
 					),
 				},

@@ -20,7 +20,7 @@ func TestAccDataSourceConfiguration_empty(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.namep_configuration.example",
 						tfjsonpath.New("configuration"),
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"formats": knownvalue.MapExact(map[string]knownvalue.Check{}),
 							"variables": knownvalue.MapExact(map[string]knownvalue.Check{}),
 							"variable_maps": knownvalue.MapExact(map[string]knownvalue.Check{}),

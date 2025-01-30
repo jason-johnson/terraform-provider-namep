@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the desired interfaces.
@@ -101,9 +102,11 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 			resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
 		}
 	}
+	tflog.Debug(ctx, fmt.Sprintf("maybe using format: %q", resourceType))
 	format, exists := (*configurationsArg.Formats)[resourceType]
 
 	if !exists {
+		tflog.Debug(ctx, fmt.Sprintf("format not found for %q, now tryind default: %q", resourceType, typeInfo.DefaultSelector))
 		format, exists = (*configurationsArg.Formats)[typeInfo.DefaultSelector]
 
 		if !exists {

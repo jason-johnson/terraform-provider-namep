@@ -54,10 +54,12 @@ func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.Sch
 				Required:    false,
 				Optional:    true,
 			},
-			"location_maps": schema.ObjectAttribute{
-				Description:    "Maps to support location name substitutions.",
-				Computed:       true,
-				AttributeTypes: configAttributes(),
+			"location_maps": schema.MapAttribute{
+				Description: "Maps to support location name substitutions.",
+				Computed:    true,
+				ElementType: types.MapType{
+					ElemType: types.StringType,
+				},
 			},
 		},
 	}
@@ -86,7 +88,7 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "read configuration data source")
+	tflog.Trace(ctx, "read azure locations data source")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)

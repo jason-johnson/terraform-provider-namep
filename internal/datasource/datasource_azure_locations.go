@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
@@ -33,6 +34,7 @@ type azureLocationsDataSource struct {
 type azureLocationsDataSourceModel struct {
 	SubscriptionID   types.String `tfsdk:"subscription_id"`
 	SubscriptionName types.String `tfsdk:"subscription_display_name"`
+	Static           types.Bool   `tfsdk:"static"`
 	LocationMaps     types.Map    `tfsdk:"location_maps"`
 }
 
@@ -51,6 +53,11 @@ func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.Sch
 			},
 			"subscription_display_name": schema.StringAttribute{
 				Description: "Subscription Display Name to pull locations from (cannot be used with `subscription_id`).",
+				Required:    false,
+				Optional:    true,
+			},
+			"static": schema.BoolAttribute{
+				Description: "Static flag to determine if the data source should be static.",
 				Required:    false,
 				Optional:    true,
 			},
@@ -79,12 +86,34 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
-	subscriptionId, err := subscriptionId(ctx, config.SubscriptionID, config.SubscriptionName)
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("failed to obtain a credential: %v", err))
+		return
+	}
+
+	subscriptionId, err := subscriptionId(ctx, cred, config.SubscriptionID, config.SubscriptionName)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
 		return
 	}
 	config.SubscriptionID = types.StringValue(subscriptionId)
+
+	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
+	if err != nil {
+		log.Fatalf("failed to create client: %v", err)
+	}
+	pager := clientFactory.NewClient().NewListLocationsPager(subscriptionId, &armsubscriptions.ClientListLocationsOptions{IncludeExtendedLocations: nil})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatalf("failed to locations advance page: %v", err)
+		}
+		for _, v := range page.Value {
+			// You could use page here. We use blank identifier for just demo purposes.
+			_ = v
+		}
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -94,15 +123,9 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func subscriptionId(ctx context.Context, subscriptionId types.String, subscriptionName types.String) (string, error) {
+func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionId types.String, subscriptionName types.String) (string, error) {
 	if !subscriptionId.IsNull() {
 		return subscriptionId.ValueString(), nil
-	}
-
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("failed to obtain a credential: %v", err))
-		return "", err
 	}
 
 	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)

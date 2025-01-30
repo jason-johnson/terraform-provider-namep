@@ -97,7 +97,10 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 		resp.Diagnostics.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
 		return
 	}
-	config.SubscriptionID = types.StringValue(subscriptionId)
+
+	locations := make(map[string]map[string]string)
+	locations["locs"] = make(map[string]string)
+	locations["locs_from_display_name"] = make(map[string]string)
 
 	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
 	if err != nil {
@@ -110,10 +113,19 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 			log.Fatalf("failed to locations advance page: %v", err)
 		}
 		for _, v := range page.Value {
-			// You could use page here. We use blank identifier for just demo purposes.
-			_ = v
+			locations["locs"][*v.Name] = *v.DisplayName
+			locations["locs_from_display_name"][*v.DisplayName] = *v.Name
 		}
 	}
+
+	locationMaps, diag := types.MapValueFrom(ctx, types.MapType{ElemType: types.StringType}, locations)
+
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag.Errors()...)
+	}
+
+	config.SubscriptionID = types.StringValue(subscriptionId)
+	config.LocationMaps = locationMaps
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log

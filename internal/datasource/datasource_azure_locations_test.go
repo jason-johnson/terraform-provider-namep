@@ -21,8 +21,8 @@ func TestAccDataSourceAzureLocations_empty(t *testing.T) {
 						"data.namep_azure_locations.example",
 						tfjsonpath.New("location_maps"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"loc":                   knownvalue.MapPartial(map[string]knownvalue.Check{}),
-							"loc_from_display_name": knownvalue.MapPartial(map[string]knownvalue.Check{}),
+							"locs":                   knownvalue.MapPartial(map[string]knownvalue.Check{}),
+							"locs_from_display_name": knownvalue.MapPartial(map[string]knownvalue.Check{}),
 						}),
 					),
 				},

@@ -6,18 +6,23 @@ import (
 	"regexp"
 	"strconv"
 
+	"terraform-provider-namep/internal/cloud/azure"
 	"terraform-provider-namep/internal/shared"
 	"terraform-provider-namep/internal/utils"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource = &azureCafTypesDataSource{}
+	_ datasource.DataSource                     = &azureCafTypesDataSource{}
+	_ datasource.DataSourceWithConfigValidators = &azureCafTypesDataSource{}
 )
 
 // New is a helper function to simplify the provider implementation.
@@ -34,18 +39,6 @@ type azureCafTypesDataSourceModel struct {
 	Static  types.Bool   `tfsdk:"static"`
 	Source  types.String `tfsdk:"source"`
 	Types   types.Map    `tfsdk:"types"`
-}
-
-type cafTypeFields struct {
-	Name              string `json:"name"`
-	Slug              string `json:"slug,omitempty"`
-	MinLength         int    `json:"min_length"`
-	MaxLength         int    `json:"max_length"`
-	Lowercase         bool   `json:"lowercase,omitempty"`
-	Regex             string `json:"regex,omitempty"`
-	ValidatationRegex string `json:"validation_regex,omitempty"`
-	Dashes            bool   `json:"dashes"`
-	Scope             string `json:"scope,omitempty"`
 }
 
 func (d *azureCafTypesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -80,44 +73,36 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 	}
 }
 
+func (d *azureCafTypesDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.Conflicting(
+			path.MatchRoot("version"),
+			path.MatchRoot("static"),
+		),
+	}
+}
+
 func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var config azureCafTypesDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
-	cafUrl, oodCafUrl, err := getResourceFileStrings(config.Version)
+	var source string
+	var typeInfoMap map[string]shared.TypeFields
 
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to determine the version to fetch", err.Error())
-		return
-	}
+	if config.Static.ValueBool() {
+		source = "static"
+		typeInfoMap = make(map[string]shared.TypeFields, len(azure.ResourceDefinitions))
 
-	var defs []cafTypeFields
+		for _, def := range azure.ResourceDefinitions {
+			typeInfoMap[def.ResourceTypeName] = toSharedTypeFields(def, false)
+		}
+	} else {
+		source, typeInfoMap = getTypeInfoMap(config.Version, &resp.Diagnostics)
 
-	err = utils.GetJSON(cafUrl, &defs)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to fetch Azure CAF types", err.Error())
-		return
-	}
-
-	var oodDefs []cafTypeFields
-
-	err = utils.GetJSON(oodCafUrl, &oodDefs)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to fetch 'out of doc' Azure CAF types", err.Error())
-		return
-	}
-
-	typeInfoMap := make(map[string]shared.TypeFields, len(defs)+len(oodDefs))
-
-	for _, def := range oodDefs {
-		typeInfoMap[def.Name] = toSharedTypeFields(def)
-	}
-
-	for _, def := range defs {
-		typeInfoMap[def.Name] = toSharedTypeFields(def)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	typesAttrs := typesAttributes()
@@ -128,7 +113,7 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	config.Source = types.StringValue(cafUrl)
+	config.Source = types.StringValue(source)
 	config.Types = result
 
 	// Write logs using the tflog package
@@ -137,6 +122,47 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+}
+
+func getTypeInfoMap(version types.String, diags *diag.Diagnostics) (string, map[string]shared.TypeFields) {
+	cafUrl, oodCafUrl, err := getResourceFileStrings(version)
+
+	if err != nil {
+		diags.AddError("Failed to determine the version to fetch", err.Error())
+		return "", nil
+	}
+
+	var defs []azure.ResourceStructure
+
+	err = utils.GetJSON(cafUrl, &defs)
+
+	if err != nil {
+		tflog.Error(context.Background(), fmt.Sprintf("Failed to fetch Azure CAF types (url: %s): %v", cafUrl, err))
+		diags.AddError("Failed to fetch Azure CAF types", err.Error())
+		return "", nil
+	}
+
+	var oodDefs []azure.ResourceStructure
+
+	err = utils.GetJSON(oodCafUrl, &oodDefs)
+
+	if err != nil {
+		tflog.Error(context.Background(), fmt.Sprintf("Failed to fetch Azure CAF types (url: %s): %v", oodCafUrl, err))
+		diags.AddError("Failed to fetch 'out of doc' Azure CAF types", err.Error())
+		return "", nil
+	}
+
+	typeInfoMap := make(map[string]shared.TypeFields, len(defs)+len(oodDefs))
+
+	for _, def := range oodDefs {
+		typeInfoMap[def.ResourceTypeName] = toSharedTypeFields(def, true)
+	}
+
+	for _, def := range defs {
+		typeInfoMap[def.ResourceTypeName] = toSharedTypeFields(def, true)
+	}
+
+	return cafUrl, typeInfoMap
 }
 
 func getResourceFileStrings(versionString types.String) (string, string, error) {
@@ -162,25 +188,30 @@ func getResourceFileStrings(versionString types.String) (string, string, error) 
 	return caf, oodcaf, nil
 }
 
-func toSharedTypeFields(def cafTypeFields) shared.TypeFields {
+func toSharedTypeFields(def azure.ResourceStructure, unquoteRegex bool) shared.TypeFields {
 	dashes := "nodashes"
 	if def.Dashes {
 		dashes = "dashes"
 	}
 	defaultSelector := fmt.Sprintf("azure_%s_%s", dashes, def.Scope)
-	validationRegex, err := strconv.Unquote(def.ValidatationRegex)
+	validationRegex := def.ValidationRegExp
 
-	if err != nil {
-		tflog.Error(context.Background(), fmt.Sprintf("Failed to unquote validation regex: %v", err))
-		validationRegex = def.ValidatationRegex
+	if unquoteRegex {
+		var err error
+		validationRegex, err = strconv.Unquote(def.ValidationRegExp)
+
+		if err != nil {
+			tflog.Error(context.Background(), fmt.Sprintf("Failed to unquote validation regex: %v", err))
+			validationRegex = def.ValidationRegExp
+		}
 	}
 
 	return shared.TypeFields{
-		Name:            def.Name,
-		Slug:            def.Slug,
+		Name:            def.ResourceTypeName,
+		Slug:            def.CafPrefix,
 		MinLength:       def.MinLength,
 		MaxLength:       def.MaxLength,
-		Lowercase:       def.Lowercase,
+		Lowercase:       def.LowerCase,
 		ValidationRegex: validationRegex,
 		DefaultSelector: defaultSelector,
 	}

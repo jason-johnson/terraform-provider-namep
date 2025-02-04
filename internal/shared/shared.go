@@ -1,5 +1,9 @@
 package shared
 
+type NamepConfig struct {
+	Static bool
+}
+
 type TypeFields struct {
 	Name            string `tfsdk:"name"`
 	Slug            string `tfsdk:"slug"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -113,8 +114,10 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 			log.Fatalf("failed to locations advance page: %v", err)
 		}
 		for _, v := range page.Value {
-			locations["locs"][*v.Name] = *v.DisplayName
-			locations["locs_from_display_name"][*v.DisplayName] = *v.Name
+			shortName := computeShortName(*v.Name)
+			locations["locs"][*v.Name] = shortName
+			displayName := strings.ToLower(*v.DisplayName)
+			locations["locs_from_display_name"][displayName] = *v.Name
 		}
 	}
 
@@ -162,4 +165,49 @@ func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscripti
 	}
 
 	return "", fmt.Errorf("subscription %s not found", subscriptionName.ValueString())
+}
+
+func computeShortName(location string) string {
+	countryMap := map[string]string{
+		"southafrica": "za",
+		"europe":      "eu",
+		"australia":   "au",
+		"sweden":      "se",
+		"switzerland": "ch",
+		"india":       "in",
+		"japan":       "jp",
+		"korea":       "kr",
+		"brazil":      "br",
+		"canada":      "ca",
+		"france":      "fr",
+		"germany":     "de",
+		"norway":      "no",
+		"newzealand":  "nz",
+		"italy":       "it",
+		"poland":      "pl",
+		"spain":       "es",
+		"mexico":      "mx",
+		"israel":      "il",
+		"qatar":       "qa",
+		"singapore":   "sg",
+		"jio":         "j", // Jio is part of the India regions but we just shorten it here
+	}
+
+	dirMap := map[string]string{
+		"east":    "e",
+		"west":    "w",
+		"north":   "n",
+		"south":   "s",
+		"central": "c",
+	}
+
+	newName := location
+	for k, v := range countryMap {
+		newName = strings.Replace(newName, k, v, -1)
+	}
+	for k, v := range dirMap {
+		newName = strings.Replace(newName, k, v, -1)
+	}
+
+	return newName
 }

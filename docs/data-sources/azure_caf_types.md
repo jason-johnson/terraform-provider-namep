@@ -17,13 +17,13 @@ This data resource fetches types from the Azure CAF project for use in the confi
 
 ### Optional
 
-- `newest` (Boolean) If true, this data source will always check if it has the latest version of the data.
+- `static` (Boolean) Static flag to determine if the data source should be static.
 - `version` (String) The version of the Azure CAF types to fetch.  The newest version will be used if not specified.
 							  Possible to specify a branch name, tag name or commit hash (hash must be unique but does not have to be complete).
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `source` (String) The source URL the Azure CAF types were loaded from.
 - `types` (Map of Object) The type info map loaded from the Azure CAF project. (see [below for nested schema](#nestedatt--types))
 
 <a id="nestedatt--types"></a>

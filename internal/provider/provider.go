@@ -35,6 +35,7 @@ type namepProvider struct {
 }
 
 type namepProviderModel struct {
+	Static                          types.Bool   `tfsdk:"static"`
 	SliceString                     types.String `tfsdk:"slice_string"`
 	DefaultLocation                 types.String `tfsdk:"default_location"`
 	DefaultResourceNameFormat       types.String `tfsdk:"default_resource_name_format"`
@@ -54,6 +55,10 @@ func (p *namepProvider) Metadata(_ context.Context, _ provider.MetadataRequest, 
 func (p *namepProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"static": schema.BoolAttribute{
+				Description: "Static flag to determine if all applicable data sources should use static setting, defaults to false.",
+				Optional:    true,
+			},
 			sliceStringProp: schema.StringAttribute{
 				Description: "A String containing strings seperated by space (see Example Usage) which can be used in the format via " +
 					"the `TOKEN_*` variables (see Supported Variables).\n\nThe point of this attribute is so users who have a " +

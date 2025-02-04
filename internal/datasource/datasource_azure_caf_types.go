@@ -30,8 +30,9 @@ type azureCafTypesDataSource struct {
 }
 
 type azureCafTypesDataSourceModel struct {
-	Source  types.String `tfsdk:"source"`
 	Version types.String `tfsdk:"version"`
+	Static  types.Bool   `tfsdk:"static"`
+	Source  types.String `tfsdk:"source"`
 	Types   types.Map    `tfsdk:"types"`
 }
 
@@ -55,15 +56,20 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 	resp.Schema = schema.Schema{
 		Description: "This data resource fetches types from the Azure CAF project for use in the configuration parameter of `namestring`.",
 		Attributes: map[string]schema.Attribute{
-			"source": schema.StringAttribute{
-				Description: "The source URL the Azure CAF types were loaded from.",
-				Computed:    true,
+			"static": schema.BoolAttribute{
+				Description: "Static flag to determine if the data source should be static.",
+				Required:    false,
+				Optional:    true,
 			},
 			"version": schema.StringAttribute{
 				Description: `The version of the Azure CAF types to fetch.  The newest version will be used if not specified.
 							  Possible to specify a branch name, tag name or commit hash (hash must be unique but does not have to be complete).`,
 				Required: false,
 				Optional: true,
+			},
+			"source": schema.StringAttribute{
+				Description: "The source URL the Azure CAF types were loaded from.",
+				Computed:    true,
 			},
 			"types": schema.MapAttribute{
 				Description: "The type info map loaded from the Azure CAF project.",

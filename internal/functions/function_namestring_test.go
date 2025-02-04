@@ -151,6 +151,42 @@ func TestCustomNameFunction_AzureCaf(t *testing.T) {
 	})
 }
 
+func TestCustomNameFunction_Config(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `data "namep_azure_locations" "example" {}
+						 data "namep_azure_caf_types" "example" {}
+						 data "namep_configuration" "example" {
+						   variable_maps = data.namep_azure_locations.example.location_maps
+						   types = data.namep_azure_caf_types.example.types
+						   formats = {
+						     azure_dashes_subscription = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+						   }
+
+						   variables = {
+						     name = "main"
+						     env = "dev"
+						     app = "myapp"
+						     salt = "uxx1"
+						     loc = "westeurope"
+						   }
+					     }	
+											
+				output "test" {
+					value = provider::namep::namestring("azurerm_resource_group", data.namep_configuration.example.configuration)
+				}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-main-uxx1")),
+				},
+			},
+		},
+	})
+}
+
 const default_config_fmt = `
 resource "terraform_data" "test" {
   input = "test-value"

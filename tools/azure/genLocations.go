@@ -15,21 +15,13 @@ import (
 	"os"
 	"path"
 	"sort"
+	"terraform-provider-namep/internal/cloud"
 	"text/template"
 	"time"
 )
 
-type LocationStructure struct {
-	RegionName     string `json:"region"`
-	DefinitionName string `json:"name"`
-	// Name used in Azure
-	AzureName    string `json:"azName"`
-	ShortName    string `json:"short_name_1"`
-	AltShortName string `json:"short_name_2,omitempty"`
-}
-
 type templateData struct {
-	LocationStructures []LocationStructure
+	LocationStructures []cloud.LocationRecord
 	GeneratedTime      time.Time
 }
 
@@ -57,7 +49,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var data []LocationStructure
+	var data []cloud.LocationRecord
 	err = json.Unmarshal(sourceDefinitions, &data)
 	if err != nil {
 		log.Fatal(err)

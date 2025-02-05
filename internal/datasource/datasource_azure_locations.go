@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"terraform-provider-namep/internal/cloud/azure"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -88,7 +89,14 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
-	subscriptionId, locations := createLocations(ctx, config.SubscriptionID, config.SubscriptionName, &resp.Diagnostics)
+	var subscriptionId string
+	var locations map[string]map[string]string
+
+	if config.Static.ValueBool() {
+		subscriptionId, locations = createStaticLocationMaps()
+	} else {
+		subscriptionId, locations = createLocationMaps(ctx, config.SubscriptionID, config.SubscriptionName, &resp.Diagnostics)
+	}
 
 	locationMaps, diag := types.MapValueFrom(ctx, types.MapType{ElemType: types.StringType}, locations)
 
@@ -107,7 +115,22 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func createLocations(ctx context.Context, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
+func createStaticLocationMaps() (string, map[string]map[string]string) {
+	locations := make(map[string]map[string]string)
+	locations["locs"] = make(map[string]string)
+	locations["locs_from_display_name"] = make(map[string]string)
+
+	for k, v := range azure.LocationDefinitions {
+		shortName := computeShortName(k)
+		locations["locs"][k] = shortName
+		displayName := strings.ToLower(v.RegionName)
+		locations["locs_from_display_name"][displayName] = k
+	}
+
+	return "static", locations
+}
+
+func createLocationMaps(ctx context.Context, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
 	locations := make(map[string]map[string]string)
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)

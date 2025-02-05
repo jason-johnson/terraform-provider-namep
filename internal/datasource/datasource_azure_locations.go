@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"terraform-provider-namep/internal/cloud/azure"
+	"terraform-provider-namep/internal/shared"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -22,6 +23,7 @@ import (
 // Ensure the implementation satisfies the expected interfaces.
 var (
 	_ datasource.DataSource                     = &azureLocationsDataSource{}
+	_ datasource.DataSourceWithConfigure        = &azureLocationsDataSource{}
 	_ datasource.DataSourceWithConfigValidators = &azureLocationsDataSource{}
 )
 
@@ -32,6 +34,7 @@ func NewAzureLocations() datasource.DataSource {
 
 // data source implementation.
 type azureLocationsDataSource struct {
+	static bool
 }
 
 type azureLocationsDataSourceModel struct {
@@ -75,6 +78,24 @@ func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.Sch
 	}
 }
 
+func (d *azureLocationsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	config, ok := req.ProviderData.(shared.NamepConfig)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *NamepConfig, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.static = config.Static
+}
+
 func (d *azureLocationsDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.Conflicting(
@@ -92,7 +113,7 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 	var subscriptionId string
 	var locations map[string]map[string]string
 
-	if config.Static.ValueBool() {
+	if d.static || config.Static.ValueBool() {
 		subscriptionId, locations = createStaticLocationMaps()
 	} else {
 		subscriptionId, locations = createLocationMaps(ctx, config.SubscriptionID, config.SubscriptionName, &resp.Diagnostics)

@@ -22,6 +22,7 @@ import (
 // Ensure the implementation satisfies the expected interfaces.
 var (
 	_ datasource.DataSource                     = &azureCafTypesDataSource{}
+	_ datasource.DataSourceWithConfigure        = &azureCafTypesDataSource{}
 	_ datasource.DataSourceWithConfigValidators = &azureCafTypesDataSource{}
 )
 
@@ -32,6 +33,7 @@ func NewAzureCafTypes() datasource.DataSource {
 
 // data source implementation.
 type azureCafTypesDataSource struct {
+	static bool
 }
 
 type azureCafTypesDataSourceModel struct {
@@ -73,6 +75,24 @@ func (d *azureCafTypesDataSource) Schema(ctx context.Context, ds datasource.Sche
 	}
 }
 
+func (d *azureCafTypesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	config, ok := req.ProviderData.(shared.NamepConfig)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *NamepConfig, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.static = config.Static
+}
+
 func (d *azureCafTypesDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.Conflicting(
@@ -90,7 +110,7 @@ func (d *azureCafTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 	var source string
 	var typeInfoMap map[string]shared.TypeFields
 
-	if config.Static.ValueBool() {
+	if d.static || config.Static.ValueBool() {
 		source = "static"
 		typeInfoMap = make(map[string]shared.TypeFields, len(azure.ResourceDefinitions))
 

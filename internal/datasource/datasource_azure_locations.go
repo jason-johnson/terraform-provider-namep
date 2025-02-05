@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -87,39 +88,7 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("failed to obtain a credential: %v", err))
-		return
-	}
-
-	subscriptionId, err := subscriptionId(ctx, cred, config.SubscriptionID, config.SubscriptionName)
-	if err != nil {
-		resp.Diagnostics.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
-		return
-	}
-
-	locations := make(map[string]map[string]string)
-	locations["locs"] = make(map[string]string)
-	locations["locs_from_display_name"] = make(map[string]string)
-
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
-	if err != nil {
-		log.Fatalf("failed to create client: %v", err)
-	}
-	pager := clientFactory.NewClient().NewListLocationsPager(subscriptionId, &armsubscriptions.ClientListLocationsOptions{IncludeExtendedLocations: nil})
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			log.Fatalf("failed to locations advance page: %v", err)
-		}
-		for _, v := range page.Value {
-			shortName := computeShortName(*v.Name)
-			locations["locs"][*v.Name] = shortName
-			displayName := strings.ToLower(*v.DisplayName)
-			locations["locs_from_display_name"][displayName] = *v.Name
-		}
-	}
+	subscriptionId, locations := createLocations(ctx, config.SubscriptionID, config.SubscriptionName, &resp.Diagnostics)
 
 	locationMaps, diag := types.MapValueFrom(ctx, types.MapType{ElemType: types.StringType}, locations)
 
@@ -136,6 +105,45 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+}
+
+func createLocations(ctx context.Context, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
+	locations := make(map[string]map[string]string)
+
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		diags.AddError("Failed to obtain a credential", fmt.Sprintf("failed to obtain a credential: %v", err))
+		return "", locations
+	}
+
+	subsrId, err := subscriptionId(ctx, cred, subscriptionID, subscriptionName)
+	if err != nil {
+		diags.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
+		return subsrId, locations
+	}
+
+	locations["locs"] = make(map[string]string)
+	locations["locs_from_display_name"] = make(map[string]string)
+
+	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
+	if err != nil {
+		log.Fatalf("failed to create client: %v", err)
+	}
+	pager := clientFactory.NewClient().NewListLocationsPager(subsrId, &armsubscriptions.ClientListLocationsOptions{IncludeExtendedLocations: nil})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatalf("failed to locations advance page: %v", err)
+		}
+		for _, v := range page.Value {
+			shortName := computeShortName(*v.Name)
+			locations["locs"][*v.Name] = shortName
+			displayName := strings.ToLower(*v.DisplayName)
+			locations["locs_from_display_name"][displayName] = *v.Name
+		}
+	}
+
+	return subsrId, locations
 }
 
 func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionId types.String, subscriptionName types.String) (string, error) {

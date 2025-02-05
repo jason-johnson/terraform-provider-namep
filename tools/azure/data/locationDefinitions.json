@@ -2,289 +2,331 @@
   {
     "azName": "eastus",
     "name": "East US",
-    "region": "US",
-    "short_name_1": "eus"
+    "region": "US"
   },
   {
     "azName": "southcentralus",
     "name": "South Central US",
-    "region": "US",
-    "short_name_1": "scus"
+    "region": "US"
   },
   {
     "azName": "westus2",
     "name": "West US 2",
-    "region": "US",
-    "short_name_1": "wus2"
+    "region": "US"
   },
   {
     "azName": "westus3",
     "name": "West US 3",
-    "region": "US",
-    "short_name_1": "wus3"
+    "region": "US"
   },
   {
     "azName": "australiaeast",
     "name": "Australia East",
-    "region": "Asia Pacific",
-    "short_name_1": "ae"
+    "region": "Asia Pacific"
   },
   {
     "azName": "southeastasia",
     "name": "Southeast Asia",
-    "region": "Asia Pacific",
-    "short_name_1": "sea"
+    "region": "Asia Pacific"
   },
   {
     "azName": "northeurope",
     "name": "North Europe",
-    "region": "Europe",
-    "short_name_1": "neu",
-    "short_name_2": "ne"
+    "region": "Europe"
   },
   {
     "azName": "swedencentral",
     "name": "Sweden Central",
-    "region": "Europe",
-    "short_name_1": "sdc"
+    "region": "Europe"
   },
   {
     "azName": "uksouth",
     "name": "UK South",
-    "region": "Europe",
-    "short_name_1": "uks"
+    "region": "Europe"
   },
   {
     "azName": "westeurope",
     "name": "West Europe",
-    "region": "Europe",
-    "short_name_1": "weu",
-    "short_name_2": "we"
+    "region": "Europe"
   },
   {
     "azName": "centralus",
     "name": "Central US",
-    "region": "US",
-    "short_name_1": "cus"
+    "region": "US"
   },
   {
     "azName": "southafricanorth",
     "name": "South Africa North",
-    "region": "Africa",
-    "short_name_1": "san"
+    "region": "Africa"
   },
   {
     "azName": "centralindia",
     "name": "Central India",
-    "region": "Asia Pacific",
-    "short_name_1": "inc"
+    "region": "Asia Pacific"
   },
   {
     "azName": "eastasia",
     "name": "East Asia",
-    "region": "Asia Pacific",
-    "short_name_1": "ea"
+    "region": "Asia Pacific"
   },
   {
     "azName": "japaneast",
     "name": "Japan East",
-    "region": "Asia Pacific",
-    "short_name_1": "jpe"
+    "region": "Asia Pacific"
   },
   {
     "azName": "koreacentral",
     "name": "Korea Central",
-    "region": "Asia Pacific",
-    "short_name_1": "krc"
+    "region": "Asia Pacific"
+  },
+  {
+    "azName": "newzealandnorth",
+    "name": "New Zealand North",
+    "region": "Asia Pacific"
   },
   {
     "azName": "canadacentral",
     "name": "Canada Central",
-    "region": "Canada",
-    "short_name_1": "cnc"
+    "region": "Canada"
   },
   {
     "azName": "francecentral",
     "name": "France Central",
-    "region": "Europe",
-    "short_name_1": "frc"
+    "region": "Europe"
   },
   {
     "azName": "germanywestcentral",
     "name": "Germany West Central",
-    "region": "Europe",
-    "short_name_1": "dewc",
-    "short_name_2": "gwc"
+    "region": "Europe"
+  },
+  {
+    "azName": "italynorth",
+    "name": "Italy North",
+    "region": "Europe"
   },
   {
     "azName": "norwayeast",
     "name": "Norway East",
-    "region": "Europe",
-    "short_name_1": "nwe"
+    "region": "Europe"
+  },
+  {
+    "azName": "polandcentral",
+    "name": "Poland Central",
+    "region": "Europe"
+  },
+  {
+    "azName": "spaincentral",
+    "name": "Spain Central",
+    "region": "Europe"
   },
   {
     "azName": "switzerlandnorth",
     "name": "Switzerland North",
-    "region": "Europe",
-    "short_name_1": "chn",
-    "short_name_2": "szn"
+    "region": "Europe"
+  },
+  {
+    "azName": "mexicocentral",
+    "name": "Mexico Central",
+    "region": "Mexico"
   },
   {
     "azName": "uaenorth",
     "name": "UAE North",
-    "region": "Middle East",
-    "short_name_1": "uan"
+    "region": "Middle East"
   },
   {
     "azName": "brazilsouth",
     "name": "Brazil South",
-    "region": "South America",
-    "short_name_1": "brs"
+    "region": "South America"
+  },
+  {
+    "azName": "israelcentral",
+    "name": "Israel Central",
+    "region": "Middle East"
+  },
+  {
+    "azName": "qatarcentral",
+    "name": "Qatar Central",
+    "region": "Middle East"
+  },
+  {
+    "azName": "centralusstage",
+    "name": "Central US (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "eastusstage",
+    "name": "East US (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "eastus2stage",
+    "name": "East US 2 (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "northcentralusstage",
+    "name": "North Central US (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "southcentralusstage",
+    "name": "South Central US (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "westusstage",
+    "name": "West US (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "westus2stage",
+    "name": "West US 2 (Stage)",
+    "region": "US"
+  },
+  {
+    "azName": "eastasiastage",
+    "name": "East Asia (Stage)",
+    "region": "Asia Pacific"
+  },
+  {
+    "azName": "southeastasiastage",
+    "name": "Southeast Asia (Stage)",
+    "region": "Asia Pacific"
+  },
+  {
+    "azName": "brazilus",
+    "name": "Brazil US",
+    "region": "South America"
   },
   {
     "azName": "eastus2",
     "name": "East US 2",
-    "region": "US",
-    "short_name_1": "eus2"
+    "region": "US"
+  },
+  {
+    "azName": "eastusstg",
+    "name": "East US STG",
+    "region": "US"
   },
   {
     "azName": "northcentralus",
     "name": "North Central US",
-    "region": "US",
-    "short_name_1": "ncus"
+    "region": "US"
   },
   {
     "azName": "westus",
     "name": "West US",
-    "region": "US",
-    "short_name_1": "wus"
+    "region": "US"
   },
   {
     "azName": "japanwest",
     "name": "Japan West",
-    "region": "Asia Pacific",
-    "short_name_1": "jpw"
+    "region": "Asia Pacific"
   },
   {
     "azName": "jioindiawest",
     "name": "Jio India West",
-    "region": "Asia Pacific",
-    "short_name_1": "jiw"
+    "region": "Asia Pacific"
   },
   {
     "azName": "centraluseuap",
     "name": "Central US EUAP",
-    "region": "US",
-    "short_name_1": "ccy"
+    "region": "US"
   },
   {
     "azName": "eastus2euap",
     "name": "East US 2 EUAP",
-    "region": "US",
-    "short_name_1": "ecy"
+    "region": "US"
+  },
+  {
+    "azName": "southcentralusstg",
+    "name": "South Central US STG",
+    "region": "US"
   },
   {
     "azName": "westcentralus",
     "name": "West Central US",
-    "region": "US",
-    "short_name_1": "wcus"
+    "region": "US"
   },
   {
     "azName": "southafricawest",
     "name": "South Africa West",
-    "region": "Africa",
-    "short_name_1": "saw"
+    "region": "Africa"
   },
   {
     "azName": "australiacentral",
     "name": "Australia Central",
-    "region": "Asia Pacific",
-    "short_name_1": "acl"
+    "region": "Asia Pacific"
   },
   {
     "azName": "australiacentral2",
     "name": "Australia Central 2",
-    "region": "Asia Pacific",
-    "short_name_1": "acl2"
+    "region": "Asia Pacific"
   },
   {
     "azName": "australiasoutheast",
     "name": "Australia Southeast",
-    "region": "Asia Pacific",
-    "short_name_1": "ase"
+    "region": "Asia Pacific"
   },
   {
     "azName": "jioindiacentral",
     "name": "Jio India Central",
-    "region": "Asia Pacific",
-    "short_name_1": "jic"
+    "region": "Asia Pacific"
   },
   {
     "azName": "koreasouth",
     "name": "Korea South",
-    "region": "Asia Pacific",
-    "short_name_1": "krs"
+    "region": "Asia Pacific"
   },
   {
     "azName": "southindia",
     "name": "South India",
-    "region": "Asia Pacific",
-    "short_name_1": "ins"
+    "region": "Asia Pacific"
   },
   {
     "azName": "westindia",
     "name": "West India",
-    "region": "Asia Pacific",
-    "short_name_1": "inw"
+    "region": "Asia Pacific"
   },
   {
     "azName": "canadaeast",
     "name": "Canada East",
-    "region": "Canada",
-    "short_name_1": "cne"
+    "region": "Canada"
   },
   {
     "azName": "francesouth",
     "name": "France South",
-    "region": "Europe",
-    "short_name_1": "frs"
+    "region": "Europe"
   },
   {
     "azName": "germanynorth",
     "name": "Germany North",
-    "region": "Europe",
-    "short_name_1": "den",
-    "short_name_2": "gn"
+    "region": "Europe"
   },
   {
     "azName": "norwaywest",
     "name": "Norway West",
-    "region": "Europe",
-    "short_name_1": "nww"
+    "region": "Europe"
   },
   {
     "azName": "switzerlandwest",
     "name": "Switzerland West",
-    "region": "Europe",
-    "short_name_1": "chw",
-    "short_name_2": "szw"
+    "region": "Europe"
   },
   {
     "azName": "ukwest",
     "name": "UK West",
-    "region": "Europe",
-    "short_name_1": "ukw"
+    "region": "Europe"
   },
   {
     "azName": "uaecentral",
     "name": "UAE Central",
-    "region": "Middle East",
-    "short_name_1": "uac"
+    "region": "Middle East"
   },
   {
     "azName": "brazilsoutheast",
     "name": "Brazil Southeast",
-    "region": "South America",
-    "short_name_1": "bse"
+    "region": "South America"
   }
 ]

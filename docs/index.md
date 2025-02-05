@@ -24,8 +24,3 @@ provider "namep" {}
 ### Optional
 
 - `static` (Boolean) Static flag to determine if all applicable data sources should use static setting, defaults to false.
-
-
-
-**NOTE**: The Azure mappings are actually loaded from the [azurecaf](https://github.com/aztfmod/terraform-provider-azurecaf) project.
-

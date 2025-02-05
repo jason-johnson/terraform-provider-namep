@@ -16,34 +16,13 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"terraform-provider-namep/internal/cloud/azure"
 	"text/template"
 	"time"
 )
 
-// ResourceStructure resource definition structure
-type ResourceStructure struct {
-	// Resource type name
-	ResourceTypeName string `json:"name"`
-	// Resource prefix as defined in the Azure Cloud Adoption Framework
-	CafPrefix string `json:"slug,omitempty"`
-	// MaxLength attribute define the maximum length of the name
-	MinLength int `json:"min_length"`
-	// MaxLength attribute define the maximum length of the name
-	MaxLength int `json:"max_length"`
-	// enforce lowercase
-	LowerCase bool `json:"lowercase,omitempty"`
-	// Regular expression to apply to the resource type
-	RegEx string `json:"regex,omitempty"`
-	// the Regular expression to validate the generated string
-	ValidationRegExp string `json:"validation_regex,omitempty"`
-	// can the resource include dashes
-	Dashes bool `json:"dashes"`
-	// The scope of this name where it needs to be unique
-	Scope string `json:"scope,omitempty"`
-}
-
 type templateData struct {
-	ResourceStructures []ResourceStructure
+	ResourceStructures []azure.ResourceStructure
 	GeneratedTime      time.Time
 	SlugMap            map[string]string
 }
@@ -78,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var data []ResourceStructure
+	var data []azure.ResourceStructure
 	err = json.Unmarshal(sourceDefinitions, &data)
 	if err != nil {
 		log.Fatal(err)
@@ -89,7 +68,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var dataUndocumented []ResourceStructure
+	var dataUndocumented []azure.ResourceStructure
 	err = json.Unmarshal(sourceDefinitionsUndocumented, &dataUndocumented)
 	if err != nil {
 		log.Fatal(err)

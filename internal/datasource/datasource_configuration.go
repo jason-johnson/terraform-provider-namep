@@ -46,7 +46,7 @@ func (d *configurationDataSource) Metadata(_ context.Context, req datasource.Met
 
 func (d *configurationDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "This data resource fetches types from the Azure CAF project for use in the configuration parameter of `namestring`.",
+		Description: `This data resource provides a suitable value to be used in the configuration parameter of ` + "`namestring`" + `. For an detailed explaination of these fields, see the ` + "`namestring`" + ` function documentation .`,
 		Attributes: map[string]schema.Attribute{
 			"formats": schema.MapAttribute{
 				Description: "Formats map to include in final configuration.",

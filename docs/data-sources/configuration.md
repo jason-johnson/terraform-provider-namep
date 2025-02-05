@@ -3,12 +3,12 @@
 page_title: "namep_configuration Data Source - terraform-provider-namep"
 subcategory: ""
 description: |-
-  This data resource fetches types from the Azure CAF project for use in the configuration parameter of namestring.
+  This data resource provides a suitable value to be used in the configuration parameter of namestring. For an detailed explaination of these fields, see the namestring function documentation .
 ---
 
 # namep_configuration (Data Source)
 
-This data resource fetches types from the Azure CAF project for use in the configuration parameter of `namestring`.
+This data resource provides a suitable value to be used in the configuration parameter of `namestring`. For an detailed explaination of these fields, see the `namestring` function documentation .
 
 ## Example Usage
 

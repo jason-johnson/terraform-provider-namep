@@ -15,13 +15,13 @@ import (
 	"os"
 	"path"
 	"sort"
-	"terraform-provider-namep/internal/cloud"
+	"terraform-provider-namep/internal/cloud/azure"
 	"text/template"
 	"time"
 )
 
 type templateData struct {
-	LocationStructures []cloud.LocationRecord
+	LocationStructures []azure.LocationRecord
 	GeneratedTime      time.Time
 }
 
@@ -49,7 +49,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var data []cloud.LocationRecord
+	var data []azure.LocationRecord
 	err = json.Unmarshal(sourceDefinitions, &data)
 	if err != nil {
 		log.Fatal(err)

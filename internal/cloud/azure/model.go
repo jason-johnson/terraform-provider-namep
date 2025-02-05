@@ -1,5 +1,12 @@
 package azure
 
+type LocationRecord struct {
+	RegionName     string `json:"region"`
+	DefinitionName string `json:"name"`
+	// Name used in Azure
+	AzureName    string `json:"azName"`
+}
+
 type ResourceStructure struct {
 	// Resource type name
 	ResourceTypeName string `json:"name"`

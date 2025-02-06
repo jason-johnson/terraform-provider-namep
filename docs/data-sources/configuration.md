@@ -3,12 +3,14 @@
 page_title: "namep_configuration Data Source - terraform-provider-namep"
 subcategory: ""
 description: |-
-  This data resource provides a suitable value to be used in the configuration parameter of namestring. For an detailed explaination of these fields, see the namestring function documentation .
+  This data resource provides a suitable value to be used in the configuration parameter of the namestring function.  The produced configuration is always guaranteed to
+  have the right shape for the function. For an detailed explanation of these fields, see the namestring function documentation ../functions/namestring.md.
 ---
 
 # namep_configuration (Data Source)
 
-This data resource provides a suitable value to be used in the configuration parameter of `namestring`. For an detailed explaination of these fields, see the `namestring` function documentation .
+This data resource provides a suitable value to be used in the `configuration` parameter of the `namestring` function.  The produced configuration is always guaranteed to
+		have the right shape for the function. For an detailed explanation of these fields, see the [namestring function documentation](../functions/namestring.md).
 
 ## Example Usage
 
@@ -39,14 +41,14 @@ data "namep_configuration" "example" {
 
 ### Optional
 
-- `formats` (Map of String) Formats map to include in final configuration.
-- `types` (Map of Object) A map of types to include in the final configuration. (see [below for nested schema](#nestedatt--types))
-- `variable_maps` (Map of Map of String) Variable maps map to include in final configuration.
-- `variables` (Map of String) Variables map to include in final configuration.
+- `formats` (Map of String) Map of formats.
+- `types` (Map of Object) A map of types, usually created by one of the "types" data sources. (see [below for nested schema](#nestedatt--types))
+- `variable_maps` (Map of Map of String) Map of maps of variables.  Most commonly created by a "locations" data source.
+- `variables` (Map of String) Map of variables.
 
 ### Read-Only
 
-- `configuration` (Object) The configuration produced from the inputs. (see [below for nested schema](#nestedatt--configuration))
+- `configuration` (Object) The configuration produced from the inputs.  This can be passed directly to the `namestring` function in the `configuration` parameter. (see [below for nested schema](#nestedatt--configuration))
 
 <a id="nestedatt--types"></a>
 ### Nested Schema for `types`

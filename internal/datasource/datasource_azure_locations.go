@@ -50,25 +50,47 @@ func (d *azureLocationsDataSource) Metadata(_ context.Context, req datasource.Me
 
 func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "This data resource fetches types from the Azure CAF project for use in the configuration parameter of `namestring`.",
+		Description: `This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  The locations will be fetched from the specified (or active if none specified) Azure
+subscription unless ` + "`static`" + ` is set to true.
+If ` + "`static`" + ` is set to true, the locations that were build with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if ` + "`static`" + ` is
+set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider ` + "`static`" + ` field and the subscription fields in this datasource.
+
+The main use of this provider is to create these location maps to be passed to the ` + "`variable_maps`" + ` parameter in the [namep_configuration](configuration.md) data source.  Alternatively, it could be assigned to a ` + "`locals`" + ` variable to 
+add other maps for the ` + "`variable_maps`" + ` parameter.
+
+## locs
+
+This is a map from the Azure location name (e.g. "eastus") to a short name (e.g. "eus").  The short name is created by changing directions (e.g. "east") to a single letter and countries to their top level domain code (generally
+the same as the ISO 3166-1 alpha-2 code).
+
+## locs_from_display_name
+
+This is a map from the lowercase display name of the location (e.g. "east us") to the Azure location name (e.g. "eastus").  This is useful for users that want to use the display name in their configuration but need the Azure location name.
+Note this cannot be used to go from display name to short name since the ` + "`namestring`" + ` function does not support double map lookups.
+
+## Common use
+
+These variables are generally for use in formats to put a short form of the location in the computed name.  For example, a variable might be defined called ` + "`LOC`" + ` which will have the azure name of the location of the resource.  The format would then
+have ` + "`{LOCS[LOC]}`" + ` present to convert this azure location name to its short form to reduce the size of the name.
+		`,
 		Attributes: map[string]schema.Attribute{
 			"subscription_id": schema.StringAttribute{
-				Description: "Subscription ID to pull locations from (cannot be used with `subscription_display_name`).",
+				Description: "Subscription ID to pull locations from (cannot be used with `subscription_display_name` or `static`).",
 				Required:    false,
 				Optional:    true,
 			},
 			"subscription_display_name": schema.StringAttribute{
-				Description: "Subscription Display Name to pull locations from (cannot be used with `subscription_id`).",
+				Description: "Subscription Display Name to pull locations from (cannot be used with `subscription_id` or `static`).",
 				Required:    false,
 				Optional:    true,
 			},
 			"static": schema.BoolAttribute{
-				Description: "Static flag to determine if the data source should be static.",
+				Description: "Static flag to determine if the data source should be static (cannot be used with `subscription_display_name` or `subscription_id`).",
 				Required:    false,
 				Optional:    true,
 			},
 			"location_maps": schema.MapAttribute{
-				Description: "Maps to support location name substitutions.",
+				Description: "Maps of maps for location substitutions, as described above.",
 				Computed:    true,
 				ElementType: types.MapType{
 					ElemType: types.StringType,
@@ -101,6 +123,7 @@ func (d *azureLocationsDataSource) ConfigValidators(context.Context) []datasourc
 		datasourcevalidator.Conflicting(
 			path.MatchRoot("subscription_id"),
 			path.MatchRoot("subscription_display_name"),
+			path.MatchRoot("static"),
 		),
 	}
 }

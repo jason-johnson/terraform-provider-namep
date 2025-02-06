@@ -46,22 +46,23 @@ func (d *configurationDataSource) Metadata(_ context.Context, req datasource.Met
 
 func (d *configurationDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `This data resource provides a suitable value to be used in the configuration parameter of ` + "`namestring`" + `. For an detailed explaination of these fields, see the ` + "`namestring`" + ` function documentation .`,
+		Description: `This data resource provides a suitable value to be used in the ` + "`configuration` parameter of the `namestring` function" + `.  The produced configuration is always guaranteed to
+		have the right shape for the function. For an detailed explanation of these fields, see the [namestring function documentation](../functions/namestring.md).`,
 		Attributes: map[string]schema.Attribute{
 			"formats": schema.MapAttribute{
-				Description: "Formats map to include in final configuration.",
+				Description: "Map of formats.",
 				Required:    false,
 				Optional:    true,
 				ElementType: types.StringType,
 			},
 			"variables": schema.MapAttribute{
-				Description: "Variables map to include in final configuration.",
+				Description: "Map of variables.",
 				Required:    false,
 				Optional:    true,
 				ElementType: types.StringType,
 			},
 			"variable_maps": schema.MapAttribute{
-				Description: "Variable maps map to include in final configuration.",
+				Description: `Map of maps of variables.  Most commonly created by a "locations" data source.`,
 				Required:    false,
 				Optional:    true,
 				ElementType: types.MapType{
@@ -69,13 +70,13 @@ func (d *configurationDataSource) Schema(ctx context.Context, ds datasource.Sche
 				},
 			},
 			"types": schema.MapAttribute{
-				Description: `A map of types to include in the final configuration.`,
+				Description: `A map of types, usually created by one of the "types" data sources.`,
 				Required:    false,
 				Optional:    true,
 				ElementType: typesAttributes(),
 			},
 			"configuration": schema.ObjectAttribute{
-				Description:    "The configuration produced from the inputs.",
+				Description:    "The configuration produced from the inputs.  This can be passed directly to the `namestring` function in the `configuration` parameter.",
 				Computed:       true,
 				AttributeTypes: configAttributes(),
 			},

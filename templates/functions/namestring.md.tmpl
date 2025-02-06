@@ -1,0 +1,84 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Function Signature
+
+{{ .FunctionSignatureMarkdown | trimspace }}
+
+## Arguments
+
+{{ .FunctionArgumentsMarkdown | trimspace }}
+
+## Optional Arguments
+
+{{ .FunctionVariadicArgumentMarkdown | trimspace }}
+
+## Example Usage
+
+{{ tffile (printf "examples/functions/%s/function.tf" .Name)}}
+
+## Configuration
+
+The configuration for the `namestring` function is most commonly created by the data source `namep_configuration`.  It can also be manually created and has the type shown by the `config` variable below.
+
+{{ tffile (printf "examples/functions/%s/config.tf" .Name)}}
+
+The components of the configuration are: 
+
+## Variables
+
+This is a map of names to their values.  These names can be used directly in the `format` string via the interpolation syntax to substitute the value in the computed name.  These values are generally provided by the user, typically via the `variables`field 
+in the `namep_configuration` data source.  All variable names are case insensative.  Entries in this map can be overriden by the òverrides` function argument.
+
+## Variable Maps
+
+This is a map of maps of variables to their values.  These maps can be used via the interpolation syntax `#{mapname[varname]}` to substitute the value in the computed name.  These values may be provided by the user, typically via the `variable_maps` field
+in the `namep_configuration` data source, but the most common source for `variable_maps` is a "locations" data source (e.g. `namep_azure_locations`).  All variable names are case insensative.
+
+Note the variable name inside the map (varname above) needs to be a variable that exists in the `variables` map.  It cannot be a literal string value.
+
+### Types
+
+This is a map of the types which are selected by the `resource_type` function argument to select information about this type.  This information is used to provide values to `format` variables like `slug`.  It also enables validation of the final
+computed name to detect invalid names as early in the terraform cycle as possible.  Usually this validation can already occur during the plan.  Finally, this type is used to locate the `default_selector` in the case that a specific `resource_type`
+is not specified in the `format` map.  In this case, the `default_selector` is used to locate the `format` which is used to create the computed name.
+
+This map is generally provided by a "types" data source (e.g. `namep_azure_caf_types`).  Refer to these for the types of `default_selector` values you can use from the types provided.
+
+
+### Formats
+
+This is the map of formats to use to create the computed string.  The format will be selected by the passed `resource_type` argument and `default_selector` as described in the next section.  Formats are provided by the user, often via the
+`namep_configuration` data source.
+
+The string of the finally selected `formats` entry will be converted using simple interpolation rules.  Any normal text found in the string will be left as-is.  Any text start surrounded by `#{}` will
+be treated as a variable and substituted if possible.  Variables also support **optional dashes**. A variable like `#{-VAR}`
+will put a dash in front of the variable unless the value is empty.  The dash can also be after the variable name to optionally
+put it behind the variable instead. Using the dash on both sides is not supported.
+
+### Format Resolution
+
+The steps that a format are selected are:
+1. Check the `types` map for an entry for the `resource_type` function argument
+2. If none are found, `default_selector` will be set to "custom"
+3. Check the `formats` map for an entry for the `resource_type` function argument
+4. If none are found, check the `formats` map for an entry for the `default_selector` from the `types` map
+5. If the value from the previous step is not found in the `formats` map, the value will split on "_" and the last part removed (e.g. "one_two_three" will become "one_two").  If there are no more parts, the function will fail.
+6. Check the new value from the previous step in the `formats` map, if not found, go to step 5
+
+This behavior will usually allow the user to only need to specify very few formats based on `default_selector` and only provide specific `resource_type` formats in the case of an override in the normal convention.
+
+## Plan Time Resolution
+
+It is desierable, when possible, to compute names at plan time.  For cloud systems like Azure, the name of a resource is its "key" and changing it will cause the resource to be recreated.  Unfortunately, this will also happen if the name cannot be known at 
+plan time.  Things that will hinder this are reliance on values that cannot, themselves, be known at plan time.  For example, if you have a variable `SALT` which is set to be the results of a `random_string` resource, `namestring` cannot compute any name which 
+uses the `SALT` variable at plan time.  These names will display "(known after apply)" in the plan output and will potentially cause the resource to be recreated.  On later runs, after the `random_string` resource has been created, the name will be known and
+the name will be computed at plan time as normal.  Note: simply having a variable in the `variables` map that cannot be known at plan time will only affect names that rely on that variable.  Other names will be computed at plan time as normal.

@@ -1,0 +1,1 @@
+data "namep_azure_caf_types" "example" {}

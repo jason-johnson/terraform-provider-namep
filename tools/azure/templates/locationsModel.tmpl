@@ -6,19 +6,10 @@
 
 package azure
 
-type LocationStructure struct {
-	RegionName     string `json:"region"`
-	DefinitionName string `json:"name"`
-	// Name used in Azure
-	AzureName    string `json:"azName"`
-	ShortName    string `json:"short_name_1"`
-	AltShortName string `json:"short_name_2,omitempty"`
-}
-
 // LocationDefinitions are a map of definitions for the locations supported
-var LocationDefinitions = map[string]LocationStructure{
+var LocationDefinitions = map[string]LocationRecord{
     {{- range .LocationStructures }}
-    "{{.AzureName}}": {"{{.DefinitionName}}", "{{.RegionName}}", "{{.AzureName}}", "{{.ShortName}}", "{{.AltShortName}}" },
+    "{{.AzureName}}": {"{{.DefinitionName}}", "{{.RegionName}}", "{{.AzureName}}" },
     {{- end}}
 }
 

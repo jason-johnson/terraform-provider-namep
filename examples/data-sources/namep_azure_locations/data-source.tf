@@ -1,0 +1,1 @@
+data "namep_azure_locations" "example" {}

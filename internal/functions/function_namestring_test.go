@@ -187,6 +187,98 @@ func TestCustomNameFunction_Config(t *testing.T) {
 	})
 }
 
+func TestCustomNameFunction_Resolution_Specific(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config_resolution_types_fmt, `formats = {
+					specific_type = "specific_format"
+					generic_first_second = "third_form"
+					generic_first = "second_form"
+					generic = "first_form"
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("specific_format")),
+				},
+			},
+		},
+	})
+}
+
+func TestCustomNameFunction_Resolution_3rd(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config_resolution_types_fmt, `formats = {
+					generic_first_second = "third_form"
+					generic_first = "second_form"
+					generic = "first_form"
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("third_form")),
+				},
+			},
+		},
+	})
+}
+
+func TestCustomNameFunction_Resolution_2nd(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config_resolution_types_fmt, `formats = {
+					generic_first = "second_form"
+					generic = "first_form"
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("second_form")),
+				},
+			},
+		},
+	})
+}
+
+func TestCustomNameFunction_Resolution_1st(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config_resolution_types_fmt, `formats = {
+					generic = "first_form"
+				}`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("first_form")),
+				},
+			},
+		},
+	})
+}
+
+func TestCustomNameFunction_Resolution_None(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config_resolution_types_fmt, `formats = {}`),
+				ExpectError: regexp.MustCompile(`No format found`),
+			},
+		},
+	})
+}
+
 const default_config_fmt = `
 resource "terraform_data" "test" {
   input = "test-value"
@@ -279,5 +371,27 @@ locals {
 
 	  types = data.namep_azure_caf_types.example.types
 	}
+}
+`
+
+const config_resolution_types_fmt = `
+data "namep_configuration" "example" {
+	types = {
+		specific_type = {
+			name = "specific_type"
+			slug = "st"
+			min_length = 1
+			max_length = 90
+			lowercase = true
+			validation_regex = "^.*$"
+			default_selector = "generic_first_second"
+		}
+	}
+	
+	%s
+}
+
+output "test" {
+	value = provider::namep::namestring("specific_type", data.namep_configuration.example.configuration)
 }
 `

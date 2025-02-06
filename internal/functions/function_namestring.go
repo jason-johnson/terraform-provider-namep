@@ -101,19 +101,26 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		if k == resourceType {
 			diag := o.As(ctx, &typeInfo, basetypes.ObjectAsOptions{})
 			resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
+			break
 		}
 	}
-	tflog.Debug(ctx, fmt.Sprintf("maybe using format: %q", resourceType))
-	format, exists := (*configurationsArg.Formats)[resourceType]
+
+	toSearch := formatSearchStrings(resourceType, typeInfo.DefaultSelector)
+	var format string
+	var exists bool
+
+	for _, search := range toSearch {
+		tflog.Debug(ctx, fmt.Sprintf("searching for format: %q", search))
+		format, exists = (*configurationsArg.Formats)[search]
+
+		if exists {
+			break
+		}
+	}
 
 	if !exists {
-		tflog.Debug(ctx, fmt.Sprintf("format not found for %q, now tryind default: %q", resourceType, typeInfo.DefaultSelector))
-		format, exists = (*configurationsArg.Formats)[typeInfo.DefaultSelector]
-
-		if !exists {
-			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type %q or default format %q", resourceType, typeInfo.DefaultSelector)))
-			return
-		}
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No format found for resource type %q, tried %v", resourceType, toSearch)))
+		return
 	}
 
 	for _, overrideValue := range overridesArg {
@@ -135,6 +142,20 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, setCalculatedName(ctx, typeInfo, format, variables, variableMaps, resp))
+}
+
+func formatSearchStrings(resourceType string, defaultSelector string) []string {
+	var result []string
+	result = append(result, resourceType)
+	result = append(result, defaultSelector)
+
+	parts := strings.Split(defaultSelector, "_")
+
+	for i := len(parts) - 1; i > 0; i-- {
+		result = append(result, strings.Join(parts[:i], "_"))
+	}
+
+	return result
 }
 
 func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]string, variableMaps map[string](map[string]string), resp *function.RunResponse) *function.FuncError {

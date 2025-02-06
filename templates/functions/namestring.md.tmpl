@@ -53,18 +53,30 @@ is not specified in the `format` map.  In this case, the `default_selector` is u
 
 This map is generally provided by a "types" data source (e.g. `namep_azure_caf_types`).  Refer to these for the types of `default_selector` values you can use from the types provided.
 
+
 ### Formats
 
-This is the map of formats to use to create the computed string.  The format will be selected by the passed `resource_type` argument.  If the `resource_type` is not found in this map, the `default_selector` from the `types` map entry for the `resource_type`
-will be used to select the format. If the `default_selector` is also not found in the `formats` map, the function will fail.  This behavior will usually allow the user to only need to specify very few formats based on `default_selector` and only provide
-specific `resource_type` formats in the case of an override in the normal convention.  Formats are provided by the user, often via the `namep_configuration` data source.
+This is the map of formats to use to create the computed string.  The format will be selected by the passed `resource_type` argument and `default_selector` as described in the next section.  Formats are provided by the user, often via the
+`namep_configuration` data source.
 
 The string of the finally selected `formats` entry will be converted using simple interpolation rules.  Any normal text found in the string will be left as-is.  Any text start surrounded by `#{}` will
 be treated as a variable and substituted if possible.  Variables also support **optional dashes**. A variable like `#{-VAR}`
 will put a dash in front of the variable unless the value is empty.  The dash can also be after the variable name to optionally
 put it behind the variable instead. Using the dash on both sides is not supported.
 
-## Plan time resolution
+### Format Resolution
+
+The steps that a format are selected are:
+1. Check the `types` map for an entry for the `resource_type` function argument
+2. If none are found, `default_selector` will be set to "custom"
+3. Check the `formats` map for an entry for the `resource_type` function argument
+4. If none are found, check the `formats` map for an entry for the `default_selector` from the `types` map
+5. If the value from the previous step is not found in the `formats` map, the value will split on "_" and the last part removed (e.g. "one_two_three" will become "one_two").  If there are no more parts, the function will fail.
+6. Check the new value from the previous step in the `formats` map, if not found, go to step 5
+
+This behavior will usually allow the user to only need to specify very few formats based on `default_selector` and only provide specific `resource_type` formats in the case of an override in the normal convention.
+
+## Plan Time Resolution
 
 It is desierable, when possible, to compute names at plan time.  For cloud systems like Azure, the name of a resource is its "key" and changing it will cause the resource to be recreated.  Unfortunately, this will also happen if the name cannot be known at 
 plan time.  Things that will hinder this are reliance on values that cannot, themselves, be known at plan time.  For example, if you have a variable `SALT` which is set to be the results of a `random_string` resource, `namestring` cannot compute any name which 

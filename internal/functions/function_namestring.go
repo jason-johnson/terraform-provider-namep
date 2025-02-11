@@ -123,6 +123,8 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		return
 	}
 
+	variables := keysToUpper(*configurationsArg.Variables)
+
 	for _, overrideValue := range overridesArg {
 		if overrideValue == nil {
 			resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("Got null map for override"))
@@ -130,11 +132,9 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		}
 
 		for k, v := range overrideValue {
-			(*configurationsArg.Variables)[k] = v
+			variables[strings.ToUpper(k)] = v
 		}
 	}
-
-	variables := keysToUpper(*configurationsArg.Variables)
 
 	variableMaps := make(map[string](map[string]string), len(*configurationsArg.VariableMaps))
 	for k, v := range *configurationsArg.VariableMaps {

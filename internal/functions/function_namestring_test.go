@@ -57,7 +57,7 @@ func TestCustomNameFunction_GlobalFormat(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf("%s %s", config_with_default_format_fmt, `output "test" {
-					value = provider::namep::namestring("azurerm_resource_group", local.config, { name = "mygroup" })
+					value = provider::namep::namestring("azurerm_resource_group", local.config, { NAME = "mygroup" })
 				}`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("rg-myapp-dev-weu-mygroup-uxx1")),
@@ -272,7 +272,7 @@ func TestCustomNameFunction_Resolution_None(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(config_resolution_types_fmt, `formats = {}`),
+				Config:      fmt.Sprintf(config_resolution_types_fmt, `formats = {}`),
 				ExpectError: regexp.MustCompile(`No format found`),
 			},
 		},

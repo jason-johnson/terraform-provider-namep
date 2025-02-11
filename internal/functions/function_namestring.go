@@ -48,8 +48,9 @@ func (f *NameStringFunction) Definition(ctx context.Context, req function.Defini
 				Description: "Type of resource to create a name for (required for selecting format, certain variables and perform validation)",
 			},
 			function.ObjectParameter{
-				Name:        "configurations",
-				Description: "A configuration object that contains the variables and formats to use for the name.",
+				Name:               "configurations",
+				Description:        "A configuration object that contains the variables and formats to use for the name.",
+				AllowUnknownValues: true,
 				AttributeTypes: map[string]attr.Type{
 					"variables":     types.MapType{ElemType: types.StringType},
 					"formats":       types.MapType{ElemType: types.StringType},
@@ -84,13 +85,14 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 	var resourceType string
 
 	var configurationsArg struct {
-		Variables    *map[string]string              `tfsdk:"variables"`
-		Formats      *map[string]string              `tfsdk:"formats"`
-		VariableMaps *map[string](map[string]string) `tfsdk:"variable_maps"`
-		Types        *map[string]types.Object        `tfsdk:"types"`
+		Variables    *map[string]types.String              `tfsdk:"variables"`
+		Formats      *map[string]string                    `tfsdk:"formats"`
+		VariableMaps *map[string](map[string]types.String) `tfsdk:"variable_maps"`
+		Types        *map[string]types.Object              `tfsdk:"types"`
 	}
-	var overridesArg []map[string]string
+	var overridesArg []map[string]string // TODO: should this types.String ?
 
+	// req.Arguments[1] is unknown even though only one nested field is unknown
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
 
 	typeInfo := typeFields{
@@ -132,11 +134,11 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		}
 
 		for k, v := range overrideValue {
-			variables[strings.ToUpper(k)] = v
+			variables[strings.ToUpper(k)] = types.StringValue(v)
 		}
 	}
 
-	variableMaps := make(map[string](map[string]string), len(*configurationsArg.VariableMaps))
+	variableMaps := make(map[string](map[string]types.String), len(*configurationsArg.VariableMaps))
 	for k, v := range *configurationsArg.VariableMaps {
 		variableMaps[strings.ToUpper(k)] = keysToUpper(v)
 	}
@@ -158,8 +160,10 @@ func formatSearchStrings(resourceType string, defaultSelector string) []string {
 	return result
 }
 
-func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]string, variableMaps map[string](map[string]string), resp *function.RunResponse) *function.FuncError {
+func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]types.String, variableMaps map[string](map[string]types.String), resp *function.RunResponse) *function.FuncError {
 	re := regexp.MustCompile(`#\{-?[\w[\]]+-?}`)
+
+	isUnknown := false
 
 	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {
 		tl := len(token)
@@ -184,6 +188,14 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 				return token
 			}
 
+			if v.IsUnknown() {
+				isUnknown = true
+				tokenProcessed = false
+				return token
+			}
+
+			val := v.ValueString()
+
 			if varMapName != "" {
 				vm, mapExists := variableMaps[varMapName]
 
@@ -192,15 +204,17 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 					return token
 				}
 
-				v, varExists = vm[strings.ToUpper(v)]
+				v, varExists = vm[strings.ToUpper(val)]
 
 				if !varExists {
 					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q in map %q", varName, varMapName)))
 					return token
 				}
+
+				val = v.ValueString()
 			}
 
-			tokenResult = v
+			tokenResult = val
 		}
 
 		if tokenProcessed && len(tokenResult) > 0 {
@@ -214,13 +228,17 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 		return tokenResult
 	})
 
+	if isUnknown {
+		return function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, types.StringUnknown()))
+	}
+
 	resp.Error = validateResult(result, typeInfo, resp)
 
 	return function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, result))
 }
 
-func keysToUpper(m map[string]string) map[string]string {
-	newMap := make(map[string]string, len(m))
+func keysToUpper(m map[string]types.String) map[string]types.String {
+	newMap := make(map[string]types.String, len(m))
 	for k, v := range m {
 		newMap[strings.ToUpper(k)] = v
 	}

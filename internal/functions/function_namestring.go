@@ -92,7 +92,6 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 	}
 	var overridesArg []map[string]string // TODO: should this types.String ?
 
-	// req.Arguments[1] is unknown even though only one nested field is unknown
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
 
 	typeInfo := typeFields{

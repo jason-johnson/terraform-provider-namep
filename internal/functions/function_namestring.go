@@ -192,10 +192,11 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 					return token
 				}
 
+				prevVal := v
 				v, varExists = vm[strings.ToUpper(v)]
 
 				if !varExists {
-					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q in map %q", varName, varMapName)))
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for value %q (value of %q) in map %q", prevVal, varName, varMapName)))
 					return token
 				}
 			}

@@ -131,3 +131,43 @@ It is desierable, when possible, to compute names at plan time.  For cloud syste
 plan time.  Things that will hinder this are reliance on values that cannot, themselves, be known at plan time.  For example, if you have a variable `SALT` which is set to be the results of a `random_string` resource, `namestring` cannot compute any name which 
 uses the `SALT` variable at plan time.  These names will display "(known after apply)" in the plan output and will potentially cause the resource to be recreated.  On later runs, after the `random_string` resource has been created, the name will be known and
 the name will be computed at plan time as normal.  Note: simply having a variable in the `variables` map that cannot be known at plan time will only affect names that rely on that variable.  Other names will be computed at plan time as normal.
+
+## Unknown Values Strategy
+
+With the current version of this provider, if any value in the configuration is not known at plan time (e.g. the `random_string` mentioned above) the entire configuration will be unknown at plan time.  This means **no names** will be known at plan time, even
+those which do not use the unknown value.  We hope this limitation of the provider can be addressed in future versions.  To work around this, you can use a strategy like this:
+
+```terraform
+resource "random_string" "rnd" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
+data "namep_azure_locations" "example" {}
+
+data "namep_azure_caf_types" "example" {}
+
+data "namep_configuration" "example" {
+  variable_maps = data.namep_azure_locations.example.location_maps
+  types         = data.namep_azure_caf_types.example.types
+  formats = {
+    azure_dashes_subscription = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+  }
+
+  variables = {
+    name = "main"
+    env  = "dev"
+    app  = "myapp"
+    salt = "NOT SET"
+    loc  = "westeurope"
+  }
+}
+
+output "test" {
+  value = provider::namep::namestring("azurerm_resource_group", data.namep_configuration.example.configuration, { salt = random_string.rnd.result })
+}
+```
+
+This way, any resources in your configuration that rely on the unknown value will crash at plan time because "NOT SET" should be invalid in any name.  For each such resource, an override can be used as shown in the output `test`.  This way, only
+resources that depend on the random string will use it and be delayed and all other names can be computed at plan time.

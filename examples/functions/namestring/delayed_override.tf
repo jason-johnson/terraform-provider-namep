@@ -12,18 +12,19 @@ data "namep_configuration" "example" {
   variable_maps = data.namep_azure_locations.example.location_maps
   types         = data.namep_azure_caf_types.example.types
   formats = {
-    azure_dashes_subscription = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+    azure_dashes        = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}"
+    azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}-#{RND}"
   }
 
   variables = {
     name = "main"
     env  = "dev"
     app  = "myapp"
-    salt = "NOT SET"
+    rnd  = "NOT SET"
     loc  = "westeurope"
   }
 }
 
 output "test" {
-  value = provider::namep::namestring("azurerm_resource_group", data.namep_configuration.example.configuration, { salt = random_string.rnd.result })
+  value = provider::namep::namestring("azurerm_resource_group", data.namep_configuration.example.configuration, { rnd = random_string.rnd.result })
 }

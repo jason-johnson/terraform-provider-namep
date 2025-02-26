@@ -85,14 +85,14 @@ The components of the configuration are:
 ## Variables
 
 This is a map of names to their values.  These names can be used directly in the `format` string via the interpolation syntax to substitute the value in the computed name.  These values are generally provided by the user, typically via the `variables`field 
-in the `namep_configuration` data source.  All variable names are case insensative.  Entries in this map can be overriden by the òverrides` function argument.
+in the `namep_configuration` data source.  All variable names are case insensitive.  Entries in this map can be overridden by the `overrides` function argument.
 
 ## Variable Maps
 
 This is a map of maps of variables to their values.  These maps can be used via the interpolation syntax `#{mapname[varname]}` to substitute the value in the computed name.  These values may be provided by the user, typically via the `variable_maps` field
-in the `namep_configuration` data source, but the most common source for `variable_maps` is a "locations" data source (e.g. `namep_azure_locations`).  All variable names are case insensative.
+in the `namep_configuration` data source, but the most common source for `variable_maps` is a "locations" data source (e.g. `namep_azure_locations`).  All variable names are case insensitive.
 
-Note the variable name inside the map (varname above) needs to be a variable that exists in the `variables` map.  It cannot be a literal string value.
+Note the variable name inside the map (`varname` above) needs to be a variable that exists in the `variables` map.  It cannot be a literal string value.
 
 ### Types
 
@@ -127,15 +127,20 @@ This behavior will usually allow the user to only need to specify very few forma
 
 ## Plan Time Resolution
 
-It is desierable, when possible, to compute names at plan time.  For cloud systems like Azure, the name of a resource is its "key" and changing it will cause the resource to be recreated.  Unfortunately, this will also happen if the name cannot be known at 
-plan time.  Things that will hinder this are reliance on values that cannot, themselves, be known at plan time.  For example, if you have a variable `SALT` which is set to be the results of a `random_string` resource, `namestring` cannot compute any name which 
-uses the `SALT` variable at plan time.  These names will display "(known after apply)" in the plan output and will potentially cause the resource to be recreated.  On later runs, after the `random_string` resource has been created, the name will be known and
-the name will be computed at plan time as normal.  Note: simply having a variable in the `variables` map that cannot be known at plan time will only affect names that rely on that variable.  Other names will be computed at plan time as normal.
+It is desirable, when possible, to compute names at plan time.  For cloud systems like Azure, the name of a resource is its "key" and changing it will cause the resource to be recreated.  Unfortunately, this will also happen if the name cannot be known at 
+plan time.  Things that will hinder this are reliance on values that cannot, themselves, be known at plan time.  For example, if you have a variable `RND` which is set to be the results of a `random_string` resource, `namestring` cannot compute any name which 
+uses the `RND` variable at plan time.  These names will display "(known after apply)" in the plan output and will potentially cause the resource to be recreated.  On later runs, after the `random_string` resource has been created, the name will be known and
+the name will be computed at plan time as normal.  Note: simply having a variable in the `variables` map that cannot be known at plan time will only affect names that rely on that variable.  Other names will be computed at plan time as
+normal (caveat: see [Unknown Values Strategy](#Unknown-Values-Strategy) below).
 
 ## Unknown Values Strategy
 
-With the current version of this provider, if any value in the configuration is not known at plan time (e.g. the `random_string` mentioned above) the entire configuration will be unknown at plan time.  This means **no names** will be known at plan time, even
-those which do not use the unknown value.  We hope this limitation of the provider can be addressed in future versions.  To work around this, you can use a strategy like this:
+In terraform, if a data source depends on an unknown value [all outputs of the data source will be unknown at plan time](https://github.com/hashicorp/terraform-plugin-framework/issues/1089#issuecomment-2657972457).  As a result,
+if any value passed to the `namep_configuration` data source is unknown (e.g. the `random_string` mentioned above) the entire configuration will be unknown at plan time.  This means **no names** which use the configuration
+will be known at plan time, even those which do not use the unknown value.  We hope this limitation of data sources can be addressed in future terraform versions.
+
+One approach to work around this issue is to set the unknown variable to a known value, like "NOT SET", and then use the `overrides` function argument to
+override the value at the function call site.  For example:
 
 ```terraform
 resource "random_string" "rnd" {
@@ -152,22 +157,60 @@ data "namep_configuration" "example" {
   variable_maps = data.namep_azure_locations.example.location_maps
   types         = data.namep_azure_caf_types.example.types
   formats = {
-    azure_dashes_subscription = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+    azure_dashes        = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}"
+    azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}-#{RND}"
   }
 
   variables = {
     name = "main"
     env  = "dev"
     app  = "myapp"
-    salt = "NOT SET"
+    rnd  = "NOT SET"
     loc  = "westeurope"
   }
 }
 
 output "test" {
-  value = provider::namep::namestring("azurerm_resource_group", data.namep_configuration.example.configuration, { salt = random_string.rnd.result })
+  value = provider::namep::namestring("azurerm_resource_group", data.namep_configuration.example.configuration, { rnd = random_string.rnd.result })
 }
 ```
 
-This way, any resources in your configuration that rely on the unknown value will crash at plan time because "NOT SET" should be invalid in any name.  For each such resource, an override can be used as shown in the output `test`.  This way, only
-resources that depend on the random string will use it and be delayed and all other names can be computed at plan time.
+This way, any resources in your configuration that rely on the unknown value will crash at plan time because "NOT SET" should be invalid in any name.  For each such resource, an override can be used as shown in the
+output `test`.  This way, only resources that depend on the random string will use it and be delayed and all other names can be computed at plan time.  One issue with this approach is having to remember to override the value
+for every resource that uses the unknown value.  An alternative approach is to use `locals` to create the configuration, as shown here:
+
+```terraform
+resource "random_string" "rnd" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
+data "namep_azure_locations" "example" {}
+
+data "namep_azure_caf_types" "example" {}
+
+locals {
+  config = {
+    variable_maps = data.namep_azure_locations.example.location_maps
+    types         = data.namep_azure_caf_types.example.types
+    formats = {
+      azure_dashes        = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}"
+      azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}-#{RND}"
+    }
+    variables = {
+      name = "main"
+      env  = "dev"
+      app  = "myapp"
+      loc  = "westeurope"
+      rnd  = random_string.rnd.result
+    }
+  }
+}
+
+output "test" {
+  value = provider::namep::namestring("azurerm_resource_group", local.config)
+}
+```
+
+With this configuration, only formats that use `RND` will be unknown at plan time and no function call sites need to be adjusted.  Generally this will be the best approach to dealing with potentially unknown values. 

@@ -48,8 +48,9 @@ func (f *NameStringFunction) Definition(ctx context.Context, req function.Defini
 				Description: "Type of resource to create a name for (required for selecting format, certain variables and perform validation)",
 			},
 			function.ObjectParameter{
-				Name:        "configurations",
-				Description: "A configuration object that contains the variables and formats to use for the name.",
+				Name:               "configurations",
+				Description:        "A configuration object that contains the variables and formats to use for the name.",
+				AllowUnknownValues: true,
 				AttributeTypes: map[string]attr.Type{
 					"variables":     types.MapType{ElemType: types.StringType},
 					"formats":       types.MapType{ElemType: types.StringType},
@@ -82,38 +83,74 @@ func (f *NameStringFunction) Definition(ctx context.Context, req function.Defini
 
 func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var resourceType string
-
-	var configurationsArg struct {
-		Variables    *map[string]string              `tfsdk:"variables"`
-		Formats      *map[string]string              `tfsdk:"formats"`
-		VariableMaps *map[string](map[string]string) `tfsdk:"variable_maps"`
-		Types        *map[string]types.Object        `tfsdk:"types"`
-	}
+	var configurationsObj types.Object
 	var overridesArg []map[string]string
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
+	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsObj, &overridesArg))
+
+	if resp.Error != nil || configurationsObj.IsUnknown() {
+		return
+	}
+
+	var cfgs struct {
+		Variables    types.Map `tfsdk:"variables"`
+		Formats      types.Map `tfsdk:"formats"`
+		VariableMaps types.Map `tfsdk:"variable_maps"`
+		Types        types.Map `tfsdk:"types"`
+	}
+
+	diags := configurationsObj.As(ctx, &cfgs, basetypes.ObjectAsOptions{})
+	resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diags))
+
+	if cfgs.Formats.IsUnknown() || cfgs.Types.IsUnknown() || cfgs.Variables.IsUnknown() || cfgs.VariableMaps.IsUnknown() {
+		// if the top level maps are unknown then skip for a later phase where at least those are known
+		return
+	}
+
+	var configurationsArg struct {
+		Variables    map[string]types.String `tfsdk:"variables"`
+		Formats      map[string]types.String `tfsdk:"formats"`
+		VariableMaps map[string]types.Map    `tfsdk:"variable_maps"`
+		Types        map[string]types.Object `tfsdk:"types"`
+	}
+
+	diags = configurationsObj.As(ctx, &configurationsArg, basetypes.ObjectAsOptions{})
+	resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diags))
+
+	if resp.Error != nil {
+		return
+	}
 
 	typeInfo := typeFields{
 		DefaultSelector:   "custom",
 		ValidatationRegex: ".*", // No possible validation for default custom names
 	}
-	for k, o := range *configurationsArg.Types {
+	for k, o := range configurationsArg.Types {
 		if k == resourceType {
+			if o.IsUnknown() {
+				return
+			}
 			diag := o.As(ctx, &typeInfo, basetypes.ObjectAsOptions{})
-			resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diag))
 			break
 		}
 	}
 
 	toSearch := formatSearchStrings(resourceType, typeInfo.DefaultSelector)
 	var format string
+	var formatString types.String
 	var exists bool
 
 	for _, search := range toSearch {
 		tflog.Debug(ctx, fmt.Sprintf("searching for format: %q", search))
-		format, exists = (*configurationsArg.Formats)[search]
+		formatString, exists = configurationsArg.Formats[search]
 
 		if exists {
+			if formatString.IsUnknown() {
+				return
+			}
+
+			format = formatString.ValueString()
 			break
 		}
 	}
@@ -123,7 +160,7 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		return
 	}
 
-	variables := keysToUpper(*configurationsArg.Variables)
+	variables := keysToUpper(configurationsArg.Variables)
 
 	for _, overrideValue := range overridesArg {
 		if overrideValue == nil {
@@ -132,13 +169,22 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		}
 
 		for k, v := range overrideValue {
-			variables[strings.ToUpper(k)] = v
+			variables[strings.ToUpper(k)] = types.StringValue(v)
 		}
 	}
 
-	variableMaps := make(map[string](map[string]string), len(*configurationsArg.VariableMaps))
-	for k, v := range *configurationsArg.VariableMaps {
-		variableMaps[strings.ToUpper(k)] = keysToUpper(v)
+	variableMaps := make(map[string](map[string]types.String), len(configurationsArg.VariableMaps))
+
+	for k, v := range configurationsArg.VariableMaps {
+		if v.IsUnknown() {
+			return
+		}
+
+		vm := make(map[string]types.String, len(v.Elements()))
+		diags = v.ElementsAs(ctx, &vm, false)
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diags))
+
+		variableMaps[strings.ToUpper(k)] = keysToUpper(vm)
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, setCalculatedName(ctx, typeInfo, format, variables, variableMaps, resp))
@@ -158,8 +204,10 @@ func formatSearchStrings(resourceType string, defaultSelector string) []string {
 	return result
 }
 
-func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]string, variableMaps map[string](map[string]string), resp *function.RunResponse) *function.FuncError {
+func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, variables map[string]types.String, variableMaps map[string](map[string]types.String), resp *function.RunResponse) *function.FuncError {
 	re := regexp.MustCompile(`#\{-?[\w[\]]+-?}`)
+
+	isUnknown := false
 
 	result := re.ReplaceAllStringFunc(format, func(token string) (r string) {
 		tl := len(token)
@@ -184,6 +232,14 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 				return token
 			}
 
+			if v.IsUnknown() {
+				isUnknown = true
+				tokenProcessed = false
+				return token
+			}
+
+			val := v.ValueString()
+
 			if varMapName != "" {
 				vm, mapExists := variableMaps[varMapName]
 
@@ -192,16 +248,17 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 					return token
 				}
 
-				prevVal := v
-				v, varExists = vm[strings.ToUpper(v)]
+				v, varExists = vm[strings.ToUpper(val)]
 
 				if !varExists {
-					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for value %q (value of %q) in map %q", prevVal, varName, varMapName)))
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for value %q (value of %q) in map %q", val, varName, varMapName)))
 					return token
 				}
+
+				val = v.ValueString()
 			}
 
-			tokenResult = v
+			tokenResult = val
 		}
 
 		if tokenProcessed && len(tokenResult) > 0 {
@@ -215,13 +272,17 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 		return tokenResult
 	})
 
+	if isUnknown {
+		return function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, types.StringUnknown()))
+	}
+
 	resp.Error = validateResult(result, typeInfo, resp)
 
 	return function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, result))
 }
 
-func keysToUpper(m map[string]string) map[string]string {
-	newMap := make(map[string]string, len(m))
+func keysToUpper(m map[string]types.String) map[string]types.String {
+	newMap := make(map[string]types.String, len(m))
 	for k, v := range m {
 		newMap[strings.ToUpper(k)] = v
 	}

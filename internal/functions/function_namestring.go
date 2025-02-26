@@ -83,38 +83,74 @@ func (f *NameStringFunction) Definition(ctx context.Context, req function.Defini
 
 func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var resourceType string
+	var configurationsObj types.Object
+	var overridesArg []map[string]string
+
+	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsObj, &overridesArg))
+
+	if resp.Error != nil || configurationsObj.IsUnknown() {
+		return
+	}
+
+	var cfgs struct {
+		Variables    types.Map `tfsdk:"variables"`
+		Formats      types.Map `tfsdk:"formats"`
+		VariableMaps types.Map `tfsdk:"variable_maps"`
+		Types        types.Map `tfsdk:"types"`
+	}
+
+	diags := configurationsObj.As(ctx, &cfgs, basetypes.ObjectAsOptions{})
+	resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diags))
+
+	if cfgs.Formats.IsUnknown() || cfgs.Types.IsUnknown() || cfgs.Variables.IsUnknown() || cfgs.VariableMaps.IsUnknown() {
+		// if the top level maps are unknown then skip for a later phase where at least those are known
+		return
+	}
 
 	var configurationsArg struct {
-		Variables    *map[string]types.String              `tfsdk:"variables"`
-		Formats      *map[string]string                    `tfsdk:"formats"`
-		VariableMaps *map[string](map[string]types.String) `tfsdk:"variable_maps"`
-		Types        *map[string]types.Object              `tfsdk:"types"`
+		Variables    map[string]types.String `tfsdk:"variables"`
+		Formats      map[string]types.String `tfsdk:"formats"`
+		VariableMaps map[string]types.Map    `tfsdk:"variable_maps"`
+		Types        map[string]types.Object `tfsdk:"types"`
 	}
-	var overridesArg []map[string]string // TODO: should this types.String ?
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &resourceType, &configurationsArg, &overridesArg))
+	diags = configurationsObj.As(ctx, &configurationsArg, basetypes.ObjectAsOptions{})
+	resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diags))
+
+	if resp.Error != nil {
+		return
+	}
 
 	typeInfo := typeFields{
 		DefaultSelector:   "custom",
 		ValidatationRegex: ".*", // No possible validation for default custom names
 	}
-	for k, o := range *configurationsArg.Types {
+	for k, o := range configurationsArg.Types {
 		if k == resourceType {
+			if o.IsUnknown() {
+				return
+			}
 			diag := o.As(ctx, &typeInfo, basetypes.ObjectAsOptions{})
-			resp.Error = function.ConcatFuncErrors(function.FuncErrorFromDiags(ctx, diag))
+			resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diag))
 			break
 		}
 	}
 
 	toSearch := formatSearchStrings(resourceType, typeInfo.DefaultSelector)
 	var format string
+	var formatString types.String
 	var exists bool
 
 	for _, search := range toSearch {
 		tflog.Debug(ctx, fmt.Sprintf("searching for format: %q", search))
-		format, exists = (*configurationsArg.Formats)[search]
+		formatString, exists = configurationsArg.Formats[search]
 
 		if exists {
+			if formatString.IsUnknown() {
+				return
+			}
+
+			format = formatString.ValueString()
 			break
 		}
 	}
@@ -124,7 +160,7 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		return
 	}
 
-	variables := keysToUpper(*configurationsArg.Variables)
+	variables := keysToUpper(configurationsArg.Variables)
 
 	for _, overrideValue := range overridesArg {
 		if overrideValue == nil {
@@ -137,9 +173,18 @@ func (f *NameStringFunction) Run(ctx context.Context, req function.RunRequest, r
 		}
 	}
 
-	variableMaps := make(map[string](map[string]types.String), len(*configurationsArg.VariableMaps))
-	for k, v := range *configurationsArg.VariableMaps {
-		variableMaps[strings.ToUpper(k)] = keysToUpper(v)
+	variableMaps := make(map[string](map[string]types.String), len(configurationsArg.VariableMaps))
+
+	for k, v := range configurationsArg.VariableMaps {
+		if v.IsUnknown() {
+			return
+		}
+
+		vm := make(map[string]types.String, len(v.Elements()))
+		diags = v.ElementsAs(ctx, &vm, false)
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, diags))
+
+		variableMaps[strings.ToUpper(k)] = keysToUpper(vm)
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, setCalculatedName(ctx, typeInfo, format, variables, variableMaps, resp))

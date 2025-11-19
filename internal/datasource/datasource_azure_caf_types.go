@@ -54,7 +54,15 @@ If the ` + "`static`" + ` field is true then the types retrieved when this provi
 set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider ` + "`static`" + ` field and the ` + "`version`" + ` field in this datasource (it will be ignored).
 
 The purpose of this data source is for creating the types to to be passed to the ` + "`types`" + ` parameter in the [namep_configuration](configuration.md) data source.  Alternatively, it could be assigned to a ` + "`locals`" + ` variable to 
-add other types for the ` + "`types`" + ` parameter. 
+add other types for the ` + "`types`" + ` parameter.
+
+## Version Compatibility
+
+**Important**: When using specific Azure CAF versions with this data source, be aware that Azure CAF version ` + "`v1.2.29`" + ` or earlier will not include all available Azure resource types. To have complete Azure resource type coverage, you must either:
+
+- Avoid specifying the ` + "`version`" + ` parameter to get the latest Azure CAF types, or  
+- Specify Azure CAF version ` + "`v1.2.30`" + ` or later or
+- Use version 2.1.* of this provider
 
 ## Default Selector
 

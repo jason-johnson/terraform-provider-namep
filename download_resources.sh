@@ -7,5 +7,4 @@
 #sed -i 's/azurecaf/internal\/provider/g' gen.go
 #mv gen.go tools
 curl -sLOJ https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition.json
-curl -sLOJ https://raw.githubusercontent.com/aztfmod/terraform-provider-azurecaf/master/resourceDefinition_out_of_docs.json
 mv resourceDefinition*.json tools/azure/data

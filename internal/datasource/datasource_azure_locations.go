@@ -52,8 +52,8 @@ func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.Sch
 	resp.Schema = schema.Schema{
 		Description: `This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  The locations will be fetched from the specified (or active if none specified) Azure
 subscription unless ` + "`static`" + ` is set to true.
-If ` + "`static`" + ` is set to true, the locations that were build with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if ` + "`static`" + ` is
-set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider ` + "`static`" + ` field and the subscription fields in this datasource.
+If ` + "`static`" + ` is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if ` + "`static`" + ` is
+set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider ` + "`static`" + ` field and the subscription fields in this data source.
 
 The main use of this provider is to create these location maps to be passed to the ` + "`variable_maps`" + ` parameter in the [namep_configuration](configuration.md) data source.  Alternatively, it could be assigned to a ` + "`locals`" + ` variable to 
 add other maps for the ` + "`variable_maps`" + ` parameter.

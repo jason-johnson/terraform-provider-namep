@@ -38,14 +38,14 @@ func (f *NameStringFunction) Metadata(ctx context.Context, req function.Metadata
 
 func (f *NameStringFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
-		Summary: "Generate an name string based on the resource type and a configuration",
-		Description: `This function creates a name for any terraform resource or field.
-					  The resulting format will be used based on the the resource type selected and the configuration.  This allows users to create conventions for the names of all resources.`,
+		Summary: "Generate a name string based on the resource type and configuration",
+		Description: `This function creates a name for any Terraform resource or field.
+The function selects a format based on the resource type and configuration, allowing users to apply consistent naming conventions across resources.`,
 
 		Parameters: []function.Parameter{
 			function.StringParameter{
 				Name:        "resource_type",
-				Description: "Type of resource to create a name for (required for selecting format, certain variables and perform validation)",
+				Description: "Type of resource to create a name for. This is used to select the format, populate certain variables, and validate the result.",
 			},
 			function.ObjectParameter{
 				Name:               "configurations",

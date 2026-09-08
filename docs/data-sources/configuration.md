@@ -4,13 +4,13 @@ page_title: "namep_configuration Data Source - terraform-provider-namep"
 subcategory: ""
 description: |-
   This data resource provides a suitable value to be used in the configuration parameter of the namestring function.  The produced configuration is always guaranteed to
-  have the right shape for the function. For an detailed explanation of these fields, see the namestring function documentation ../functions/namestring.md.
+  have the right shape for the function. For a detailed explanation of these fields, see the namestring function documentation ../functions/namestring.md.
 ---
 
 # namep_configuration (Data Source)
 
 This data resource provides a suitable value to be used in the `configuration` parameter of the `namestring` function.  The produced configuration is always guaranteed to
-		have the right shape for the function. For an detailed explanation of these fields, see the [namestring function documentation](../functions/namestring.md).
+have the right shape for the function. For a detailed explanation of these fields, see the [namestring function documentation](../functions/namestring.md).
 
 ## Example Usage
 

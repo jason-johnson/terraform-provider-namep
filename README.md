@@ -6,7 +6,7 @@ them across their landscape.
 
 ## Maintainers
 
-This provider plugin is currently maintained by the Jason Johnson.
+This provider plugin is currently maintained by Jason Johnson.
 
 ## Requirements
 

@@ -3,6 +3,7 @@ package functions_test
 import (
 	"fmt"
 	"regexp"
+	"terraform-provider-namep/internal/acctest"
 	"terraform-provider-namep/internal/provider"
 	"testing"
 
@@ -158,6 +159,8 @@ func TestCustomNameFunction_AzureCaf(t *testing.T) {
 }
 
 func TestCustomNameFunction_Config(t *testing.T) {
+	acctest.RequireAzureAuthentication(t)
+
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
@@ -194,6 +197,8 @@ func TestCustomNameFunction_Config(t *testing.T) {
 }
 
 func TestCustomNameFunction_DelayConfig(t *testing.T) {
+	acctest.RequireAzureAuthentication(t)
+
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),

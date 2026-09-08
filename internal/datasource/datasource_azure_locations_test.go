@@ -11,6 +11,8 @@ import (
 )
 
 func TestAccDataSourceAzureLocations_empty(t *testing.T) {
+	acctest.RequireAzureAuthentication(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

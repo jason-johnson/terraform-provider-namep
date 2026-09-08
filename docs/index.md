@@ -24,3 +24,10 @@ provider "namep" {}
 ### Optional
 
 - `static` (Boolean) Static flag to determine if all applicable data sources should use static setting, defaults to false.
+
+## Next Steps
+
+- Use the [`namestring` function](functions/namestring.md) to generate resource names.
+- Build a function configuration with the [`namep_configuration` data source](data-sources/configuration.md).
+- Load Azure resource types with the [`namep_azure_caf_types` data source](data-sources/azure_caf_types.md).
+- Load Azure location mappings with the [`namep_azure_locations` data source](data-sources/azure_locations.md).

@@ -228,8 +228,12 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 			v, varExists := variables[strings.ToUpper(varName)]
 
 			if !varExists {
-				resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", varName)))
-				return token
+				if strings.ToUpper(varName) == "RESOURCE_TYPE" {
+					v = types.StringValue(typeInfo.Name)
+				} else {
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", varName)))
+					return token
+				}
 			}
 
 			if v.IsUnknown() {

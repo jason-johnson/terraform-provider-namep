@@ -340,6 +340,23 @@ func TestCustomNameFunction_Resolution_None(t *testing.T) {
 	})
 }
 
+func TestCustomNameFunction_Resolution_TypesMap(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config_with_azure_types_config_map_fmt,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test1", knownvalue.StringExact("t1-myapp-dev-weu-main-uxx1")),
+					statecheck.ExpectKnownOutputValue("test2", knownvalue.StringExact("t3-myapp-dev-weu-main-uxx1")),
+				},
+			},
+		},
+	})
+}
+
 const default_config_fmt = `
 resource "terraform_data" "test" {
   input = "test-value"
@@ -432,6 +449,46 @@ locals {
 
 	  types = data.namep_azure_caf_types.example.types
 	}
+}
+`
+
+const config_with_azure_types_config_map_fmt = `
+data "namep_azure_caf_types" "example" {}
+
+locals {
+	config = {
+	  variable_maps = {
+	    locs = {
+		  westeurope = "weu"											
+		}
+		type_slugs = {
+		  azurerm_resource_group = "t1"
+		  azurerm_key_vault = "t2"
+		  azurerm_linux_web_app = "t3"
+		}
+	  }
+	  variables = {
+	    name = "main"
+	    app = "myapp"
+	    env = "dev"
+	    salt = "uxx1"
+	    loc = "westeurope"
+	  }
+
+	  formats = {
+	  	azure_dashes = "#{TYPE_SLUGS[RESOURCE_TYPE]}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	  }
+
+	  types = data.namep_azure_caf_types.example.types
+	}
+}
+
+output "test1" {
+  value = provider::namep::namestring("azurerm_resource_group", local.config)
+}
+
+output "test2" {
+  value = provider::namep::namestring("azurerm_linux_web_app", local.config)
 }
 `
 

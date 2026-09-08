@@ -87,6 +87,10 @@ The components of the configuration are:
 This is a map of names to their values.  These names can be used directly in the `format` string via the interpolation syntax to substitute the value in the computed name.  These values are generally provided by the user, typically via the `variables` field
 in the `namep_configuration` data source.  All variable names are case insensitive.  Entries in this map can be overridden by the `overrides` function argument.
 
+### Resource Type Variable
+
+The built-in `RESOURCE_TYPE` variable contains the value passed to the `namestring` function's `resource_type` argument. It can be used directly in a format as `#{RESOURCE_TYPE}` or as the lookup key for a variable map, such as `#{TYPE_SLUGS[RESOURCE_TYPE]}`.
+
 ## Variable Maps
 
 This is a map of maps of variables to their values.  These maps can be used via the interpolation syntax `#{mapname[varname]}` to substitute the value in the computed name.  These values may be provided by the user, typically via the `variable_maps` field

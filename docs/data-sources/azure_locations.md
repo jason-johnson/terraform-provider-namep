@@ -17,7 +17,7 @@ description: |-
   Note this cannot be used to go from display name to short name since the namestring function does not support double map lookups.
   Common use
   These variables are generally for use in formats to put a short form of the location in the computed name.  For example, a variable might be defined called LOC which will have the azure name of the location of the resource.  The format would then
-  have {LOCS[LOC]} present to convert this azure location name to its short form to reduce the size of the name.
+  have #{LOCS[LOC]} present to convert this azure location name to its short form to reduce the size of the name.
 ---
 
 # namep_azure_locations (Data Source)
@@ -43,7 +43,7 @@ Note this cannot be used to go from display name to short name since the `namest
 ## Common use
 
 These variables are generally for use in formats to put a short form of the location in the computed name.  For example, a variable might be defined called `LOC` which will have the azure name of the location of the resource.  The format would then
-have `{LOCS[LOC]}` present to convert this azure location name to its short form to reduce the size of the name.
+have `#{LOCS[LOC]}` present to convert this azure location name to its short form to reduce the size of the name.
 
 ## Example Usage
 

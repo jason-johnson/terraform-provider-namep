@@ -39,6 +39,12 @@ type azureLocationsDataSource struct {
 	static bool
 }
 
+type azureLocationsDependencies struct {
+	credential           azcore.TokenCredential
+	clientOptions        *arm.ClientOptions
+	activeSubscriptionID func(context.Context) (string, error)
+}
+
 type azureLocationsDataSourceModel struct {
 	SubscriptionID   types.String `tfsdk:"subscription_id"`
 	SubscriptionName types.String `tfsdk:"subscription_display_name"`
@@ -179,18 +185,22 @@ func createStaticLocationMaps() (string, map[string]map[string]string) {
 }
 
 func createLocationMaps(ctx context.Context, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	credential, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		diags.AddError("Failed to obtain a credential", fmt.Sprintf("failed to obtain a credential: %v", err))
 		return "", map[string]map[string]string{}
 	}
-	return createLocationMapsWithCredential(ctx, cred, subscriptionID, subscriptionName, nil, diags)
+	dependencies := azureLocationsDependencies{
+		credential:           credential,
+		activeSubscriptionID: azureCLIActiveSubscriptionID,
+	}
+	return createLocationMapsWithDependencies(ctx, dependencies, subscriptionID, subscriptionName, diags)
 }
 
-func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions, diags *diag.Diagnostics) (string, map[string]map[string]string) {
+func createLocationMapsWithDependencies(ctx context.Context, dependencies azureLocationsDependencies, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
 	locations := make(map[string]map[string]string)
 
-	subsrId, err := subscriptionId(ctx, cred, subscriptionID, subscriptionName, clientOptions)
+	subsrId, err := subscriptionId(ctx, dependencies, subscriptionID, subscriptionName)
 	if err != nil {
 		diags.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
 		return subsrId, locations
@@ -199,7 +209,7 @@ func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCred
 	locations["locs"] = make(map[string]string)
 	locations["locs_from_display_name"] = make(map[string]string)
 
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
+	clientFactory, err := armsubscriptions.NewClientFactory(dependencies.credential, dependencies.clientOptions)
 	if err != nil {
 		diags.AddError("Failed to create Azure subscriptions client", fmt.Sprintf("failed to create Azure subscriptions client: %v", err))
 		return subsrId, locations
@@ -222,11 +232,7 @@ func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCred
 	return subsrId, locations
 }
 
-func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions) (string, error) {
-	return subscriptionIdWithActiveSubscription(ctx, cred, subscriptionID, subscriptionName, clientOptions, azureCLIActiveSubscriptionID)
-}
-
-func subscriptionIdWithActiveSubscription(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions, activeSubscriptionID func(context.Context) (string, error)) (string, error) {
+func subscriptionId(ctx context.Context, dependencies azureLocationsDependencies, subscriptionID types.String, subscriptionName types.String) (string, error) {
 	if !subscriptionID.IsNull() {
 		return subscriptionID.ValueString(), nil
 	}
@@ -235,7 +241,7 @@ func subscriptionIdWithActiveSubscription(ctx context.Context, cred azcore.Token
 		return environmentSubscriptionID, nil
 	}
 
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
+	clientFactory, err := armsubscriptions.NewClientFactory(dependencies.credential, dependencies.clientOptions)
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("failed to create client: %v", err))
 		return "", err
@@ -267,7 +273,7 @@ func subscriptionIdWithActiveSubscription(ctx context.Context, cred azcore.Token
 	case 1:
 		return subscriptionIDs[0], nil
 	default:
-		if activeSubscription, err := activeSubscriptionID(ctx); err == nil {
+		if activeSubscription, err := dependencies.activeSubscriptionID(ctx); err == nil {
 			for _, visibleSubscriptionID := range subscriptionIDs {
 				if strings.EqualFold(visibleSubscriptionID, activeSubscription) {
 					return visibleSubscriptionID, nil

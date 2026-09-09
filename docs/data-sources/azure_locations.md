@@ -4,6 +4,7 @@ page_title: "namep_azure_locations Data Source - terraform-provider-namep"
 subcategory: ""
 description: |-
   This data resource creates a map of maps of variables for locations: locs and locs_from_display_name.  Unless static is set to true, the Azure subscription is selected in this order: configured subscription_id, ARM_SUBSCRIPTION_ID, configured subscription_display_name, the active Azure CLI subscription when it is visible to the authenticated identity, or the only visible subscription. An error is returned when no subscription can be selected unambiguously.
+  AzureRM-compatible workload identity federation is supported through ARM_TENANT_ID, ARM_CLIENT_ID, and either ARM_OIDC_TOKEN_FILE_PATH or ARM_OIDC_TOKEN. AZURE_TENANT_ID and AZURE_CLIENT_ID can supply the identity fields. SDK-native workload identity using AZURE_FEDERATED_TOKEN_FILE and other credentials in DefaultAzureCredential are also supported.
   If static is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if static is
   set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider static field and the subscription fields in this data source.
   The main use of this provider is to create these location maps to be passed to the variable_maps parameter in the namep_configuration configuration.md data source.  Alternatively, it could be assigned to a locals variable to
@@ -22,6 +23,8 @@ description: |-
 # namep_azure_locations (Data Source)
 
 This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  Unless `static` is set to true, the Azure subscription is selected in this order: configured `subscription_id`, `ARM_SUBSCRIPTION_ID`, configured `subscription_display_name`, the active Azure CLI subscription when it is visible to the authenticated identity, or the only visible subscription. An error is returned when no subscription can be selected unambiguously.
+
+AzureRM-compatible workload identity federation is supported through `ARM_TENANT_ID`, `ARM_CLIENT_ID`, and either `ARM_OIDC_TOKEN_FILE_PATH` or `ARM_OIDC_TOKEN`. `AZURE_TENANT_ID` and `AZURE_CLIENT_ID` can supply the identity fields. SDK-native workload identity using `AZURE_FEDERATED_TOKEN_FILE` and other credentials in `DefaultAzureCredential` are also supported.
 If `static` is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if `static` is
 set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider `static` field and the subscription fields in this data source.
 

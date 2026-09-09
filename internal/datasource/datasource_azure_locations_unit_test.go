@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -61,6 +64,85 @@ func testDependencies(transport policy.Transporter, activeSubscriptionID func(co
 func activeAzureCLISubscription(subscriptionID string) func(context.Context) (string, error) {
 	return func(context.Context) (string, error) {
 		return subscriptionID, nil
+	}
+}
+
+func clearCredentialEnvironment(t *testing.T) {
+	t.Helper()
+	for _, name := range []string{
+		"ARM_CLIENT_ID",
+		"ARM_OIDC_TOKEN",
+		"ARM_OIDC_TOKEN_FILE_PATH",
+		"ARM_TENANT_ID",
+		"AZURE_CLIENT_ID",
+		"AZURE_FEDERATED_TOKEN_FILE",
+		"AZURE_TENANT_ID",
+	} {
+		t.Setenv(name, "")
+	}
+}
+
+func TestNewAzureCredentialUsesARMTokenFile(t *testing.T) {
+	clearCredentialEnvironment(t)
+	t.Setenv("ARM_TENANT_ID", "00000000-0000-0000-0000-000000000001")
+	t.Setenv("ARM_CLIENT_ID", "00000000-0000-0000-0000-000000000002")
+	tokenFilePath := filepath.Join(t.TempDir(), "token")
+	if err := os.WriteFile(tokenFilePath, []byte("file-token"), 0o600); err != nil {
+		t.Fatalf("failed to create token file: %v", err)
+	}
+	t.Setenv("ARM_OIDC_TOKEN_FILE_PATH", tokenFilePath)
+	t.Setenv("ARM_OIDC_TOKEN", "inline-token")
+
+	credential, err := newAzureCredential()
+
+	if err != nil {
+		t.Fatalf("expected workload identity credential, got error: %v", err)
+	}
+	if _, ok := credential.(*azidentity.WorkloadIdentityCredential); !ok {
+		t.Fatalf("expected workload identity credential, got %T", credential)
+	}
+}
+
+func TestNewAzureCredentialUsesARMInlineTokenWithAzureIdentity(t *testing.T) {
+	clearCredentialEnvironment(t)
+	t.Setenv("AZURE_TENANT_ID", "00000000-0000-0000-0000-000000000001")
+	t.Setenv("AZURE_CLIENT_ID", "00000000-0000-0000-0000-000000000002")
+	t.Setenv("ARM_OIDC_TOKEN", "inline-token")
+
+	credential, err := newAzureCredential()
+
+	if err != nil {
+		t.Fatalf("expected client assertion credential, got error: %v", err)
+	}
+	if _, ok := credential.(*azidentity.ClientAssertionCredential); !ok {
+		t.Fatalf("expected client assertion credential, got %T", credential)
+	}
+}
+
+func TestNewAzureCredentialDelegatesSDKNativeWorkloadIdentity(t *testing.T) {
+	clearCredentialEnvironment(t)
+	t.Setenv("AZURE_TENANT_ID", "00000000-0000-0000-0000-000000000001")
+	t.Setenv("AZURE_CLIENT_ID", "00000000-0000-0000-0000-000000000002")
+	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", filepath.Join(t.TempDir(), "token"))
+
+	credential, err := newAzureCredential()
+
+	if err != nil {
+		t.Fatalf("expected default Azure credential, got error: %v", err)
+	}
+	if _, ok := credential.(*azidentity.DefaultAzureCredential); !ok {
+		t.Fatalf("expected SDK-native configuration to use default Azure credential, got %T", credential)
+	}
+}
+
+func TestNewAzureCredentialRejectsIncompleteARMTokenConfiguration(t *testing.T) {
+	clearCredentialEnvironment(t)
+	t.Setenv("ARM_OIDC_TOKEN", "inline-token")
+
+	_, err := newAzureCredential()
+
+	if err == nil || !strings.Contains(err.Error(), "ARM_TENANT_ID or AZURE_TENANT_ID") || !strings.Contains(err.Error(), "ARM_CLIENT_ID or AZURE_CLIENT_ID") {
+		t.Fatalf("expected missing OIDC identity configuration error, got %v", err)
 	}
 }
 

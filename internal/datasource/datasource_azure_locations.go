@@ -3,6 +3,8 @@ package datasource
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"terraform-provider-namep/internal/cloud/azure"
 	"terraform-provider-namep/internal/shared"
@@ -50,8 +52,7 @@ func (d *azureLocationsDataSource) Metadata(_ context.Context, req datasource.Me
 
 func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  The locations will be fetched from the specified (or active if none specified) Azure
-subscription unless ` + "`static`" + ` is set to true.
+		Description: `This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  Unless ` + "`static`" + ` is set to true, the Azure subscription is selected in this order: configured ` + "`subscription_id`" + `, ` + "`ARM_SUBSCRIPTION_ID`" + `, configured ` + "`subscription_display_name`" + `, the active Azure CLI subscription when it is visible to the authenticated identity, or the only visible subscription. An error is returned when no subscription can be selected unambiguously.
 If ` + "`static`" + ` is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if ` + "`static`" + ` is
 set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider ` + "`static`" + ` field and the subscription fields in this data source.
 
@@ -221,9 +222,17 @@ func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCred
 	return subsrId, locations
 }
 
-func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionId types.String, subscriptionName types.String, clientOptions *arm.ClientOptions) (string, error) {
-	if !subscriptionId.IsNull() {
-		return subscriptionId.ValueString(), nil
+func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions) (string, error) {
+	return subscriptionIdWithActiveSubscription(ctx, cred, subscriptionID, subscriptionName, clientOptions, azureCLIActiveSubscriptionID)
+}
+
+func subscriptionIdWithActiveSubscription(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions, activeSubscriptionID func(context.Context) (string, error)) (string, error) {
+	if !subscriptionID.IsNull() {
+		return subscriptionID.ValueString(), nil
+	}
+
+	if environmentSubscriptionID := strings.TrimSpace(os.Getenv("ARM_SUBSCRIPTION_ID")); environmentSubscriptionID != "" {
+		return environmentSubscriptionID, nil
 	}
 
 	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
@@ -231,6 +240,7 @@ func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscripti
 		tflog.Error(ctx, fmt.Sprintf("failed to create client: %v", err))
 		return "", err
 	}
+	var subscriptionIDs []string
 	pager := clientFactory.NewClient().NewListPager(nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -238,16 +248,47 @@ func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscripti
 			return "", fmt.Errorf("failed to list all Azure subscriptions: %w", err)
 		}
 		for _, v := range page.Value {
-			if subscriptionName.IsNull() {
+			if !subscriptionName.IsNull() && v.DisplayName != nil && v.SubscriptionID != nil && *v.DisplayName == subscriptionName.ValueString() {
 				return *v.SubscriptionID, nil
 			}
-			if *v.DisplayName == subscriptionName.ValueString() {
-				return *v.SubscriptionID, nil
+			if subscriptionName.IsNull() && v.SubscriptionID != nil {
+				subscriptionIDs = append(subscriptionIDs, *v.SubscriptionID)
 			}
 		}
 	}
 
-	return "", fmt.Errorf("subscription %s not found", subscriptionName.ValueString())
+	if !subscriptionName.IsNull() {
+		return "", fmt.Errorf("subscription %q not found", subscriptionName.ValueString())
+	}
+
+	switch len(subscriptionIDs) {
+	case 0:
+		return "", fmt.Errorf("no Azure subscriptions found; configure subscription_id or set ARM_SUBSCRIPTION_ID")
+	case 1:
+		return subscriptionIDs[0], nil
+	default:
+		if activeSubscription, err := activeSubscriptionID(ctx); err == nil {
+			for _, visibleSubscriptionID := range subscriptionIDs {
+				if strings.EqualFold(visibleSubscriptionID, activeSubscription) {
+					return visibleSubscriptionID, nil
+				}
+			}
+		}
+		return "", fmt.Errorf("multiple Azure subscriptions found; configure subscription_id, set ARM_SUBSCRIPTION_ID, or configure subscription_display_name")
+	}
+}
+
+func azureCLIActiveSubscriptionID(ctx context.Context) (string, error) {
+	output, err := exec.CommandContext(ctx, "az", "account", "show", "--query", "id", "--output", "tsv").Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get the active Azure CLI subscription: %w", err)
+	}
+
+	subscriptionID := strings.TrimSpace(string(output))
+	if subscriptionID == "" {
+		return "", fmt.Errorf("Azure CLI returned an empty active subscription ID")
+	}
+	return subscriptionID, nil
 }
 
 func computeShortName(location string) string {

@@ -3,6 +3,7 @@ package datasource
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -29,12 +30,36 @@ func (t failingTransport) Do(*http.Request) (*http.Response, error) {
 	return nil, t.err
 }
 
-func TestSubscriptionIDReturnsPagingError(t *testing.T) {
-	expectedErr := errors.New("subscription request failed")
-	options := &arm.ClientOptions{ClientOptions: policy.ClientOptions{
+type responseTransport struct {
+	body string
+}
+
+func (t responseTransport) Do(request *http.Request) (*http.Response, error) {
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(strings.NewReader(t.body)),
+		Request:    request,
+	}, nil
+}
+
+func testClientOptions(transport policy.Transporter) *arm.ClientOptions {
+	return &arm.ClientOptions{ClientOptions: policy.ClientOptions{
 		Retry:     policy.RetryOptions{MaxRetries: -1},
-		Transport: failingTransport{err: expectedErr},
+		Transport: transport,
 	}}
+}
+
+func activeAzureCLISubscription(subscriptionID string) func(context.Context) (string, error) {
+	return func(context.Context) (string, error) {
+		return subscriptionID, nil
+	}
+}
+
+func TestSubscriptionIDReturnsPagingError(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", "")
+	expectedErr := errors.New("subscription request failed")
+	options := testClientOptions(failingTransport{err: expectedErr})
 
 	_, err := subscriptionId(t.Context(), testCredential{}, types.StringNull(), types.StringNull(), options)
 
@@ -43,12 +68,114 @@ func TestSubscriptionIDReturnsPagingError(t *testing.T) {
 	}
 }
 
+func TestSubscriptionIDUsesExplicitConfiguration(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", "environment-subscription")
+	options := testClientOptions(failingTransport{err: errors.New("subscription request should not be made")})
+
+	actual, err := subscriptionId(t.Context(), testCredential{}, types.StringValue("configured-subscription"), types.StringValue("configured-name"), options)
+
+	if err != nil {
+		t.Fatalf("expected configured subscription ID, got error: %v", err)
+	}
+	if actual != "configured-subscription" {
+		t.Fatalf("expected configured subscription ID, got %q", actual)
+	}
+}
+
+func TestSubscriptionIDUsesEnvironment(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", " environment-subscription ")
+	options := testClientOptions(failingTransport{err: errors.New("subscription request should not be made")})
+
+	actual, err := subscriptionId(t.Context(), testCredential{}, types.StringNull(), types.StringValue("configured-name"), options)
+
+	if err != nil {
+		t.Fatalf("expected environment subscription ID, got error: %v", err)
+	}
+	if actual != "environment-subscription" {
+		t.Fatalf("expected trimmed environment subscription ID, got %q", actual)
+	}
+}
+
+func TestSubscriptionIDUsesConfiguredDisplayName(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", "")
+	options := testClientOptions(responseTransport{body: `{
+		"value": [
+			{"subscriptionId": "first-subscription", "displayName": "First"},
+			{"subscriptionId": "selected-subscription", "displayName": "Selected"}
+		]
+	}`})
+
+	actual, err := subscriptionId(t.Context(), testCredential{}, types.StringNull(), types.StringValue("Selected"), options)
+
+	if err != nil {
+		t.Fatalf("expected display-name subscription ID, got error: %v", err)
+	}
+	if actual != "selected-subscription" {
+		t.Fatalf("expected display-name subscription ID, got %q", actual)
+	}
+}
+
+func TestSubscriptionIDUsesOnlyVisibleSubscription(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", "")
+	options := testClientOptions(responseTransport{body: `{
+		"value": [{"subscriptionId": "only-subscription", "displayName": "Only"}]
+	}`})
+	activeSubscriptionCalled := false
+
+	actual, err := subscriptionIdWithActiveSubscription(t.Context(), testCredential{}, types.StringNull(), types.StringNull(), options, func(context.Context) (string, error) {
+		activeSubscriptionCalled = true
+		return "different-subscription", nil
+	})
+
+	if err != nil {
+		t.Fatalf("expected only visible subscription ID, got error: %v", err)
+	}
+	if actual != "only-subscription" {
+		t.Fatalf("expected only visible subscription ID, got %q", actual)
+	}
+	if activeSubscriptionCalled {
+		t.Fatal("expected active subscription lookup to be skipped for one visible subscription")
+	}
+}
+
+func TestSubscriptionIDUsesActiveAzureCLISubscription(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", "")
+	options := testClientOptions(responseTransport{body: `{
+		"value": [
+			{"subscriptionId": "first-subscription", "displayName": "First"},
+			{"subscriptionId": "selected-subscription", "displayName": "Selected"}
+		]
+	}`})
+
+	actual, err := subscriptionIdWithActiveSubscription(t.Context(), testCredential{}, types.StringNull(), types.StringNull(), options, activeAzureCLISubscription("selected-subscription"))
+
+	if err != nil {
+		t.Fatalf("expected active Azure CLI subscription ID, got error: %v", err)
+	}
+	if actual != "selected-subscription" {
+		t.Fatalf("expected active Azure CLI subscription ID, got %q", actual)
+	}
+}
+
+func TestSubscriptionIDRejectsAmbiguousSubscriptions(t *testing.T) {
+	t.Setenv("ARM_SUBSCRIPTION_ID", "")
+	options := testClientOptions(responseTransport{body: `{
+		"value": [
+			{"subscriptionId": "first-subscription", "displayName": "First"},
+			{"subscriptionId": "second-subscription", "displayName": "Second"}
+		]
+	}`})
+
+	_, err := subscriptionIdWithActiveSubscription(t.Context(), testCredential{}, types.StringNull(), types.StringNull(), options, activeAzureCLISubscription("different-subscription"))
+
+	if err == nil || !strings.Contains(err.Error(), "multiple Azure subscriptions found") {
+		t.Fatalf("expected ambiguous subscription error, got %v", err)
+	}
+}
+
 func TestCreateLocationMapsReturnsLocationPagingDiagnostic(t *testing.T) {
 	expectedErr := errors.New("location request failed")
-	options := &arm.ClientOptions{ClientOptions: policy.ClientOptions{
-		Retry:     policy.RetryOptions{MaxRetries: -1},
-		Transport: failingTransport{err: expectedErr},
-	}}
+	options := testClientOptions(failingTransport{err: expectedErr})
 	var diagnostics diag.Diagnostics
 
 	subscriptionID, locations := createLocationMapsWithCredential(t.Context(), testCredential{}, types.StringValue("00000000-0000-0000-0000-000000000000"), types.StringNull(), options, &diagnostics)

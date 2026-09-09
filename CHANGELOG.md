@@ -1,3 +1,3 @@
-## 0.1.0 (Unreleased)
+# Changelog
 
-BACKWARDS INCOMPATIBILITIES / NOTES:
+Release notes and change history are maintained in [GitHub Releases](https://github.com/jason-johnson/terraform-provider-namep/releases).

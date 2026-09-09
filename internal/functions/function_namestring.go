@@ -38,14 +38,14 @@ func (f *NameStringFunction) Metadata(ctx context.Context, req function.Metadata
 
 func (f *NameStringFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
-		Summary: "Generate an name string based on the resource type and a configuration",
-		Description: `This function creates a name for any terraform resource or field.
-					  The resulting format will be used based on the the resource type selected and the configuration.  This allows users to create conventions for the names of all resources.`,
+		Summary: "Generate a name string based on the resource type and configuration",
+		Description: `This function creates a name for any Terraform resource or field.
+The function selects a format based on the resource type and configuration, allowing users to apply consistent naming conventions across resources.`,
 
 		Parameters: []function.Parameter{
 			function.StringParameter{
 				Name:        "resource_type",
-				Description: "Type of resource to create a name for (required for selecting format, certain variables and perform validation)",
+				Description: "Type of resource to create a name for. This is used to select the format, populate certain variables, and validate the result.",
 			},
 			function.ObjectParameter{
 				Name:               "configurations",
@@ -220,7 +220,7 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 		tokenProcessed := true
 		var tokenResult string
 
-		if token == "SLUG" {
+		if strings.EqualFold(token, "SLUG") {
 			tokenResult = typeInfo.Slug
 		} else {
 			varName, varMapName := variableLocation(token)
@@ -228,8 +228,12 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 			v, varExists := variables[strings.ToUpper(varName)]
 
 			if !varExists {
-				resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", varName)))
-				return token
+				if strings.ToUpper(varName) == "RESOURCE_TYPE" {
+					v = types.StringValue(typeInfo.Name)
+				} else {
+					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable found for %q", varName)))
+					return token
+				}
 			}
 
 			if v.IsUnknown() {
@@ -241,7 +245,7 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 			val := v.ValueString()
 
 			if varMapName != "" {
-				vm, mapExists := variableMaps[varMapName]
+				vm, mapExists := variableMaps[strings.ToUpper(varMapName)]
 
 				if !mapExists {
 					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable map found for %q", varMapName)))

@@ -5,8 +5,8 @@ subcategory: ""
 description: |-
   This data resource creates a map of maps of variables for locations: locs and locs_from_display_name.  The locations will be fetched from the specified (or active if none specified) Azure
   subscription unless static is set to true.
-  If static is set to true, the locations that were build with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if static is
-  set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider static field and the subscription fields in this datasource.
+  If static is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if static is
+  set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider static field and the subscription fields in this data source.
   The main use of this provider is to create these location maps to be passed to the variable_maps parameter in the namep_configuration configuration.md data source.  Alternatively, it could be assigned to a locals variable to
   add other maps for the variable_maps parameter.
   locs
@@ -17,15 +17,15 @@ description: |-
   Note this cannot be used to go from display name to short name since the namestring function does not support double map lookups.
   Common use
   These variables are generally for use in formats to put a short form of the location in the computed name.  For example, a variable might be defined called LOC which will have the azure name of the location of the resource.  The format would then
-  have {LOCS[LOC]} present to convert this azure location name to its short form to reduce the size of the name.
+  have #{LOCS[LOC]} present to convert this azure location name to its short form to reduce the size of the name.
 ---
 
 # namep_azure_locations (Data Source)
 
 This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  The locations will be fetched from the specified (or active if none specified) Azure
 subscription unless `static` is set to true.
-If `static` is set to true, the locations that were build with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if `static` is
-set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider `static` field and the subscription fields in this datasource.
+If `static` is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if `static` is
+set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider `static` field and the subscription fields in this data source.
 
 The main use of this provider is to create these location maps to be passed to the `variable_maps` parameter in the [namep_configuration](configuration.md) data source.  Alternatively, it could be assigned to a `locals` variable to 
 add other maps for the `variable_maps` parameter.
@@ -43,7 +43,7 @@ Note this cannot be used to go from display name to short name since the `namest
 ## Common use
 
 These variables are generally for use in formats to put a short form of the location in the computed name.  For example, a variable might be defined called `LOC` which will have the azure name of the location of the resource.  The format would then
-have `{LOCS[LOC]}` present to convert this azure location name to its short form to reduce the size of the name.
+have `#{LOCS[LOC]}` present to convert this azure location name to its short form to reduce the size of the name.
 
 ## Example Usage
 

@@ -6,11 +6,11 @@ them across their landscape.
 
 ## Maintainers
 
-This provider plugin is currently maintained by the Jason Johnson.
+This provider plugin is currently maintained by Jason Johnson.
 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.12.x
+- [Terraform](https://developer.hashicorp.com/terraform/install) 1.8.0 or later
 
 ## Installation
 

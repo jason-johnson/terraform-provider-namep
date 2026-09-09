@@ -3,6 +3,7 @@ package functions_test
 import (
 	"fmt"
 	"regexp"
+	"terraform-provider-namep/internal/acctest"
 	"terraform-provider-namep/internal/provider"
 	"testing"
 
@@ -158,6 +159,8 @@ func TestCustomNameFunction_AzureCaf(t *testing.T) {
 }
 
 func TestCustomNameFunction_Config(t *testing.T) {
+	acctest.RequireAzureAuthentication(t)
+
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
@@ -194,6 +197,8 @@ func TestCustomNameFunction_Config(t *testing.T) {
 }
 
 func TestCustomNameFunction_DelayConfig(t *testing.T) {
+	acctest.RequireAzureAuthentication(t)
+
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
@@ -335,6 +340,23 @@ func TestCustomNameFunction_Resolution_None(t *testing.T) {
 	})
 }
 
+func TestCustomNameFunction_Resolution_TypesMap(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"namep": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config_with_azure_types_config_map_fmt,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test1", knownvalue.StringExact("t1-myapp-dev-weu-main-uxx1")),
+					statecheck.ExpectKnownOutputValue("test2", knownvalue.StringExact("t3-myapp-dev-weu-main-uxx1")),
+				},
+			},
+		},
+	})
+}
+
 const default_config_fmt = `
 resource "terraform_data" "test" {
   input = "test-value"
@@ -396,7 +418,7 @@ var config_with_rg_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
 }`)
 
 var config_with_default_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
-	azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	azure_dashes_global = "#{slug}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 }`)
 
 var config_with_default_delayed_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
@@ -427,6 +449,46 @@ locals {
 
 	  types = data.namep_azure_caf_types.example.types
 	}
+}
+`
+
+const config_with_azure_types_config_map_fmt = `
+data "namep_azure_caf_types" "example" {}
+
+locals {
+	config = {
+	  variable_maps = {
+	    locs = {
+		  westeurope = "weu"											
+		}
+		type_slugs = {
+		  azurerm_resource_group = "t1"
+		  azurerm_key_vault = "t2"
+		  azurerm_linux_web_app = "t3"
+		}
+	  }
+	  variables = {
+	    name = "main"
+	    app = "myapp"
+	    env = "dev"
+	    salt = "uxx1"
+	    loc = "westeurope"
+	  }
+
+	  formats = {
+	  	azure_dashes = "#{type_slugs[resource_type]}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	  }
+
+	  types = data.namep_azure_caf_types.example.types
+	}
+}
+
+output "test1" {
+  value = provider::namep::namestring("azurerm_resource_group", local.config)
+}
+
+output "test2" {
+  value = provider::namep::namestring("azurerm_linux_web_app", local.config)
 }
 `
 

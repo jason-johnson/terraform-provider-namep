@@ -38,18 +38,24 @@ The components of the configuration are:
 This is a map of names to their values.  These names can be used directly in the `format` string via the interpolation syntax to substitute the value in the computed name.  These values are generally provided by the user, typically via the `variables` field
 in the `namep_configuration` data source.  All variable names are case insensitive.  Entries in this map can be overridden by the `overrides` function argument.
 
-### Resource Type Variable
+## Built-in Variables
+
+### `RESOURCE_TYPE`
 
 The built-in `RESOURCE_TYPE` variable contains the value passed to the `namestring` function's `resource_type` argument. It can be used directly in a format as `#{RESOURCE_TYPE}` or as the lookup key for a variable map, such as `#{TYPE_SLUGS[RESOURCE_TYPE]}`.
+
+### `SLUG`
+
+The built-in `SLUG` variable contains the `slug` value for the selected resource type. For example, the Azure CAF type for `azurerm_resource_group` has the slug `rg`. Use it in a format as `#{SLUG}`. Unlike user-defined variable names, `SLUG` must be uppercase.
 
 ## Variable Maps
 
 This is a map of maps of variables to their values.  These maps can be used via the interpolation syntax `#{mapname[varname]}` to substitute the value in the computed name.  These values may be provided by the user, typically via the `variable_maps` field
-in the `namep_configuration` data source, but the most common source for `variable_maps` is a "locations" data source (e.g. `namep_azure_locations`).  All variable names are case insensitive.
+in the `namep_configuration` data source, but the most common source for `variable_maps` is a "locations" data source (e.g. `namep_azure_locations`).
 
-Note the variable name inside the map (`varname` above) needs to be a variable that exists in the `variables` map.  It cannot be a literal string value.
+Variable map names are normalized to uppercase and must be uppercase when referenced in a format. The variable name inside the brackets and the keys within the selected map are case insensitive. The bracketed name (`varname` above) must refer to a variable from the `variables` map or a built-in variable; it cannot be a literal string value.
 
-### Types
+## Types
 
 This map contains type information selected by the `resource_type` function argument. This information provides values for format variables such as `SLUG` and enables validation of the final
 computed name as early in the Terraform lifecycle as possible. Validation can usually occur during the plan. The selected type also provides the `default_selector` when a specific `resource_type`
@@ -58,7 +64,7 @@ is not specified in the `format` map.  In this case, the `default_selector` is u
 This map is generally provided by a "types" data source (e.g. `namep_azure_caf_types`).  Refer to these for the types of `default_selector` values you can use from the types provided.
 
 
-### Formats
+## Formats
 
 This is the map of formats to use to create the computed string.  The format will be selected by the passed `resource_type` argument and `default_selector` as described in the next section.  Formats are provided by the user, often via the
 `namep_configuration` data source.
@@ -68,7 +74,7 @@ treated as a variable and substituted if possible. Variables also support **opti
 will put a dash in front of the variable unless the value is empty.  The dash can also be after the variable name to optionally
 put it behind the variable instead. Using the dash on both sides is not supported.
 
-### Format Resolution
+## Format Resolution
 
 The format is selected using these steps:
 1. Check the `types` map for an entry for the `resource_type` function argument

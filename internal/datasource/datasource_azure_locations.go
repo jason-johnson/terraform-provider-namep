@@ -3,6 +3,8 @@ package datasource
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"terraform-provider-namep/internal/cloud/azure"
 	"terraform-provider-namep/internal/shared"
@@ -37,6 +39,12 @@ type azureLocationsDataSource struct {
 	static bool
 }
 
+type azureLocationsDependencies struct {
+	credential           azcore.TokenCredential
+	clientOptions        *arm.ClientOptions
+	activeSubscriptionID func(context.Context) (string, error)
+}
+
 type azureLocationsDataSourceModel struct {
 	SubscriptionID   types.String `tfsdk:"subscription_id"`
 	SubscriptionName types.String `tfsdk:"subscription_display_name"`
@@ -50,8 +58,9 @@ func (d *azureLocationsDataSource) Metadata(_ context.Context, req datasource.Me
 
 func (d *azureLocationsDataSource) Schema(ctx context.Context, ds datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  The locations will be fetched from the specified (or active if none specified) Azure
-subscription unless ` + "`static`" + ` is set to true.
+		Description: `This data resource creates a map of maps of variables for locations: [locs](#locs) and [locs_from_display_name](#locs_from_display_name).  Unless ` + "`static`" + ` is set to true, the Azure subscription is selected in this order: configured ` + "`subscription_id`" + `, ` + "`ARM_SUBSCRIPTION_ID`" + `, configured ` + "`subscription_display_name`" + `, the active Azure CLI subscription when it is visible to the authenticated identity, or the only visible subscription. An error is returned when no subscription can be selected unambiguously.
+
+AzureRM-compatible workload identity federation is supported through ` + "`ARM_TENANT_ID`" + `, ` + "`ARM_CLIENT_ID`" + `, and either ` + "`ARM_OIDC_TOKEN_FILE_PATH`" + ` or ` + "`ARM_OIDC_TOKEN`" + `. ` + "`AZURE_TENANT_ID`" + ` and ` + "`AZURE_CLIENT_ID`" + ` can supply the identity fields. SDK-native workload identity using ` + "`AZURE_FEDERATED_TOKEN_FILE`" + ` and other credentials in ` + "`DefaultAzureCredential`" + ` are also supported.
 If ` + "`static`" + ` is set to true, the locations that were built with the namep provider will be used.  Note that the static values can get out of date since they cannot be changed without a new version of the provider.  Also note that if ` + "`static`" + ` is
 set to true in the provider, it will be used regardless of the value in the data source.  There will, however, be no conflict between the provider ` + "`static`" + ` field and the subscription fields in this data source.
 
@@ -178,18 +187,72 @@ func createStaticLocationMaps() (string, map[string]map[string]string) {
 }
 
 func createLocationMaps(ctx context.Context, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	credential, err := newAzureCredential()
 	if err != nil {
 		diags.AddError("Failed to obtain a credential", fmt.Sprintf("failed to obtain a credential: %v", err))
 		return "", map[string]map[string]string{}
 	}
-	return createLocationMapsWithCredential(ctx, cred, subscriptionID, subscriptionName, nil, diags)
+	dependencies := azureLocationsDependencies{
+		credential:           credential,
+		activeSubscriptionID: azureCLIActiveSubscriptionID,
+	}
+	return createLocationMapsWithDependencies(ctx, dependencies, subscriptionID, subscriptionName, diags)
 }
 
-func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions, diags *diag.Diagnostics) (string, map[string]map[string]string) {
+func newAzureCredential() (azcore.TokenCredential, error) {
+	tenantID := firstEnvironmentValue("ARM_TENANT_ID", "AZURE_TENANT_ID")
+	clientID := firstEnvironmentValue("ARM_CLIENT_ID", "AZURE_CLIENT_ID")
+
+	if tokenFilePath := strings.TrimSpace(os.Getenv("ARM_OIDC_TOKEN_FILE_PATH")); tokenFilePath != "" {
+		if err := validateOIDCIdentityConfiguration(tenantID, clientID, "ARM_OIDC_TOKEN_FILE_PATH"); err != nil {
+			return nil, err
+		}
+		return azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
+			TenantID:      tenantID,
+			ClientID:      clientID,
+			TokenFilePath: tokenFilePath,
+		})
+	}
+
+	if token := strings.TrimSpace(os.Getenv("ARM_OIDC_TOKEN")); token != "" {
+		if err := validateOIDCIdentityConfiguration(tenantID, clientID, "ARM_OIDC_TOKEN"); err != nil {
+			return nil, err
+		}
+		return azidentity.NewClientAssertionCredential(tenantID, clientID, func(context.Context) (string, error) {
+			return token, nil
+		}, nil)
+	}
+
+	return azidentity.NewDefaultAzureCredential(nil)
+}
+
+func firstEnvironmentValue(names ...string) string {
+	for _, name := range names {
+		if value := strings.TrimSpace(os.Getenv(name)); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+func validateOIDCIdentityConfiguration(tenantID string, clientID string, tokenVariable string) error {
+	var missing []string
+	if tenantID == "" {
+		missing = append(missing, "ARM_TENANT_ID or AZURE_TENANT_ID")
+	}
+	if clientID == "" {
+		missing = append(missing, "ARM_CLIENT_ID or AZURE_CLIENT_ID")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("%s is set but %s is missing", tokenVariable, strings.Join(missing, " and "))
+	}
+	return nil
+}
+
+func createLocationMapsWithDependencies(ctx context.Context, dependencies azureLocationsDependencies, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
 	locations := make(map[string]map[string]string)
 
-	subsrId, err := subscriptionId(ctx, cred, subscriptionID, subscriptionName, clientOptions)
+	subsrId, err := subscriptionId(ctx, dependencies, subscriptionID, subscriptionName)
 	if err != nil {
 		diags.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
 		return subsrId, locations
@@ -198,7 +261,7 @@ func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCred
 	locations["locs"] = make(map[string]string)
 	locations["locs_from_display_name"] = make(map[string]string)
 
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
+	clientFactory, err := armsubscriptions.NewClientFactory(dependencies.credential, dependencies.clientOptions)
 	if err != nil {
 		diags.AddError("Failed to create Azure subscriptions client", fmt.Sprintf("failed to create Azure subscriptions client: %v", err))
 		return subsrId, locations
@@ -221,16 +284,21 @@ func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCred
 	return subsrId, locations
 }
 
-func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionId types.String, subscriptionName types.String, clientOptions *arm.ClientOptions) (string, error) {
-	if !subscriptionId.IsNull() {
-		return subscriptionId.ValueString(), nil
+func subscriptionId(ctx context.Context, dependencies azureLocationsDependencies, subscriptionID types.String, subscriptionName types.String) (string, error) {
+	if !subscriptionID.IsNull() {
+		return subscriptionID.ValueString(), nil
 	}
 
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
+	if environmentSubscriptionID := strings.TrimSpace(os.Getenv("ARM_SUBSCRIPTION_ID")); environmentSubscriptionID != "" {
+		return environmentSubscriptionID, nil
+	}
+
+	clientFactory, err := armsubscriptions.NewClientFactory(dependencies.credential, dependencies.clientOptions)
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("failed to create client: %v", err))
 		return "", err
 	}
+	var subscriptionIDs []string
 	pager := clientFactory.NewClient().NewListPager(nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -238,16 +306,47 @@ func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscripti
 			return "", fmt.Errorf("failed to list all Azure subscriptions: %w", err)
 		}
 		for _, v := range page.Value {
-			if subscriptionName.IsNull() {
+			if !subscriptionName.IsNull() && v.DisplayName != nil && v.SubscriptionID != nil && *v.DisplayName == subscriptionName.ValueString() {
 				return *v.SubscriptionID, nil
 			}
-			if *v.DisplayName == subscriptionName.ValueString() {
-				return *v.SubscriptionID, nil
+			if subscriptionName.IsNull() && v.SubscriptionID != nil {
+				subscriptionIDs = append(subscriptionIDs, *v.SubscriptionID)
 			}
 		}
 	}
 
-	return "", fmt.Errorf("subscription %s not found", subscriptionName.ValueString())
+	if !subscriptionName.IsNull() {
+		return "", fmt.Errorf("subscription %q not found", subscriptionName.ValueString())
+	}
+
+	switch len(subscriptionIDs) {
+	case 0:
+		return "", fmt.Errorf("no Azure subscriptions found; configure subscription_id or set ARM_SUBSCRIPTION_ID")
+	case 1:
+		return subscriptionIDs[0], nil
+	default:
+		if activeSubscription, err := dependencies.activeSubscriptionID(ctx); err == nil {
+			for _, visibleSubscriptionID := range subscriptionIDs {
+				if strings.EqualFold(visibleSubscriptionID, activeSubscription) {
+					return visibleSubscriptionID, nil
+				}
+			}
+		}
+		return "", fmt.Errorf("multiple Azure subscriptions found; configure subscription_id, set ARM_SUBSCRIPTION_ID, or configure subscription_display_name")
+	}
+}
+
+func azureCLIActiveSubscriptionID(ctx context.Context) (string, error) {
+	output, err := exec.CommandContext(ctx, "az", "account", "show", "--query", "id", "--output", "tsv").Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get the active Azure CLI subscription: %w", err)
+	}
+
+	subscriptionID := strings.TrimSpace(string(output))
+	if subscriptionID == "" {
+		return "", fmt.Errorf("Azure CLI returned an empty active subscription ID")
+	}
+	return subscriptionID, nil
 }
 
 func computeShortName(location string) string {

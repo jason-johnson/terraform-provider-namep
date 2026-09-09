@@ -3,12 +3,12 @@ package datasource
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"terraform-provider-namep/internal/cloud/azure"
 	"terraform-provider-namep/internal/shared"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
@@ -141,6 +141,9 @@ func (d *azureLocationsDataSource) Read(ctx context.Context, req datasource.Read
 	} else {
 		subscriptionId, locations = createLocationMaps(ctx, config.SubscriptionID, config.SubscriptionName, &resp.Diagnostics)
 	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	locationMaps, diag := types.MapValueFrom(ctx, types.MapType{ElemType: types.StringType}, locations)
 
@@ -175,15 +178,18 @@ func createStaticLocationMaps() (string, map[string]map[string]string) {
 }
 
 func createLocationMaps(ctx context.Context, subscriptionID types.String, subscriptionName types.String, diags *diag.Diagnostics) (string, map[string]map[string]string) {
-	locations := make(map[string]map[string]string)
-
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		diags.AddError("Failed to obtain a credential", fmt.Sprintf("failed to obtain a credential: %v", err))
-		return "", locations
+		return "", map[string]map[string]string{}
 	}
+	return createLocationMapsWithCredential(ctx, cred, subscriptionID, subscriptionName, nil, diags)
+}
 
-	subsrId, err := subscriptionId(ctx, cred, subscriptionID, subscriptionName)
+func createLocationMapsWithCredential(ctx context.Context, cred azcore.TokenCredential, subscriptionID types.String, subscriptionName types.String, clientOptions *arm.ClientOptions, diags *diag.Diagnostics) (string, map[string]map[string]string) {
+	locations := make(map[string]map[string]string)
+
+	subsrId, err := subscriptionId(ctx, cred, subscriptionID, subscriptionName, clientOptions)
 	if err != nil {
 		diags.AddError("failed to get subscription ID", fmt.Sprintf("failed to get subscription ID: %v", err))
 		return subsrId, locations
@@ -192,15 +198,17 @@ func createLocationMaps(ctx context.Context, subscriptionID types.String, subscr
 	locations["locs"] = make(map[string]string)
 	locations["locs_from_display_name"] = make(map[string]string)
 
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
+	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
 	if err != nil {
-		log.Fatalf("failed to create client: %v", err)
+		diags.AddError("Failed to create Azure subscriptions client", fmt.Sprintf("failed to create Azure subscriptions client: %v", err))
+		return subsrId, locations
 	}
 	pager := clientFactory.NewClient().NewListLocationsPager(subsrId, &armsubscriptions.ClientListLocationsOptions{IncludeExtendedLocations: nil})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			log.Fatalf("failed to locations advance page: %v", err)
+			diags.AddError("Failed to list Azure locations", fmt.Sprintf("failed to list Azure locations for subscription %q: %v", subsrId, err))
+			return subsrId, locations
 		}
 		for _, v := range page.Value {
 			shortName := computeShortName(*v.Name)
@@ -213,12 +221,12 @@ func createLocationMaps(ctx context.Context, subscriptionID types.String, subscr
 	return subsrId, locations
 }
 
-func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionId types.String, subscriptionName types.String) (string, error) {
+func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscriptionId types.String, subscriptionName types.String, clientOptions *arm.ClientOptions) (string, error) {
 	if !subscriptionId.IsNull() {
 		return subscriptionId.ValueString(), nil
 	}
 
-	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
+	clientFactory, err := armsubscriptions.NewClientFactory(cred, clientOptions)
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("failed to create client: %v", err))
 		return "", err
@@ -227,7 +235,7 @@ func subscriptionId(ctx context.Context, cred azcore.TokenCredential, subscripti
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			log.Fatalf("failed to advance page: %v", err)
+			return "", fmt.Errorf("failed to list all Azure subscriptions: %w", err)
 		}
 		for _, v := range page.Value {
 			if subscriptionName.IsNull() {

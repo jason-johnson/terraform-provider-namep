@@ -418,7 +418,7 @@ var config_with_rg_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
 }`)
 
 var config_with_default_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
-	azure_dashes_global = "#{SLUG}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	azure_dashes_global = "#{slug}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 }`)
 
 var config_with_default_delayed_format_fmt = fmt.Sprintf(default_config_fmt, `formats = {
@@ -476,7 +476,7 @@ locals {
 	  }
 
 	  formats = {
-	  	azure_dashes = "#{TYPE_SLUGS[RESOURCE_TYPE]}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
+	  	azure_dashes = "#{type_slugs[resource_type]}-#{APP}-#{env}-#{LOCS[LOC]}-#{NAME}#{-SALT}"
 	  }
 
 	  types = data.namep_azure_caf_types.example.types

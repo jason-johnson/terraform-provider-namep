@@ -220,7 +220,7 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 		tokenProcessed := true
 		var tokenResult string
 
-		if token == "SLUG" {
+		if strings.EqualFold(token, "SLUG") {
 			tokenResult = typeInfo.Slug
 		} else {
 			varName, varMapName := variableLocation(token)
@@ -245,7 +245,7 @@ func setCalculatedName(ctx context.Context, typeInfo typeFields, format string, 
 			val := v.ValueString()
 
 			if varMapName != "" {
-				vm, mapExists := variableMaps[varMapName]
+				vm, mapExists := variableMaps[strings.ToUpper(varMapName)]
 
 				if !mapExists {
 					resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(fmt.Sprintf("No variable map found for %q", varMapName)))

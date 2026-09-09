@@ -95,14 +95,14 @@ The built-in `RESOURCE_TYPE` variable contains the value passed to the `namestri
 
 ### `SLUG`
 
-The built-in `SLUG` variable contains the `slug` value for the selected resource type. For example, the Azure CAF type for `azurerm_resource_group` has the slug `rg`. Use it in a format as `#{SLUG}`. Unlike user-defined variable names, `SLUG` must be uppercase.
+The built-in `SLUG` variable contains the `slug` value for the selected resource type. For example, the Azure CAF type for `azurerm_resource_group` has the slug `rg`. Use it in a format as `#{SLUG}`.
 
 ## Variable Maps
 
 This is a map of maps of variables to their values.  These maps can be used via the interpolation syntax `#{mapname[varname]}` to substitute the value in the computed name.  These values may be provided by the user, typically via the `variable_maps` field
 in the `namep_configuration` data source, but the most common source for `variable_maps` is a "locations" data source (e.g. `namep_azure_locations`).
 
-Variable map names are normalized to uppercase and must be uppercase when referenced in a format. The variable name inside the brackets and the keys within the selected map are case insensitive. The bracketed name (`varname` above) must refer to a variable from the `variables` map or a built-in variable; it cannot be a literal string value.
+Variable names, built-in variable names, variable map names, and keys within variable maps are all case insensitive. For example, `#{LOCS[LOC]}` and `#{locs[loc]}` are equivalent. The bracketed name (`varname` above) must refer to a variable from the `variables` map or a built-in variable; it cannot be a literal string value.
 
 ## Types
 
